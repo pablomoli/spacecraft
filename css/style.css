@@ -18,8 +18,17 @@ body {
 }
 
 header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Space between image and text */
+  text-align: left; /* Align text to the left */
   margin-bottom: 20px;
+}
+
+header img {
+  width: 100px; /* Adjust the size of the image */
+  height: 100px; /* Adjust the size of the image */
+  border-radius: 50%; /* Optional: make the image round */
 }
 
 h1 {
