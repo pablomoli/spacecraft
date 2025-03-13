@@ -27,8 +27,8 @@ header {
 
 header img {
   width: 100px; /* Adjust the size of the image */
-  height: 100px; /* Adjust the size of the image */
-  border-radius: 50%; /* Optional: make the image round */
+  /*height: 100px; /* Adjust the size of the image */*/
+  border-radius: 30%; /* Optional: make the image round */
 }
 
 h1 {
