@@ -121,7 +121,7 @@ const trajectory = new THREE.Line(
   new THREE.BufferGeometry().setFromPoints([dirLight.position, ball.position]),
   new THREE.LineBasicMaterial({ color: 0x00ff00 }),
 );
-sunGroup.add(trajectory);
+// sunGroup.add(trajectory);
 
 function addStar() {
   const geometry = new THREE.SphereGeometry(0.1, 24, 24);
