@@ -155,7 +155,7 @@ window.addEventListener("resize", () => {
 function animate() {
   requestAnimationFrame(animate);
 
-  earth.rotation.y += 0.001;
+  earth.rotation.y += 0.003;
   clouds.rotation.y += 0.0005;
   clouds.rotation.z += 0.0005;
 
