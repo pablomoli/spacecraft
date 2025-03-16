@@ -19,12 +19,12 @@ html {
 
 nav {
   z-index: 2;
-  /*FIXME: change z indez to be above canvas */
   color: #fff;
   position: relative;
   padding: 4rem 8rem;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 nav a {
@@ -37,6 +37,21 @@ nav ul {
   display: flex;
   list-style: none;
   gap: 2rem;
+}
+
+.nav-left {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  gap: 2rem;
+}
+
+nav a:hover {
+  color: #05377b;
 }
 
 .title {
