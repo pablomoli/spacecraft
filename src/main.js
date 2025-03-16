@@ -7,6 +7,7 @@ const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
 };
+const basePath = "/";
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(
@@ -34,10 +35,10 @@ const earth = new THREE.Group();
 scene.add(earth);
 
 const mat = new THREE.MeshStandardMaterial({
-  map: loader.load("earth.jpg"),
+  map: loader.load(basePath + "earth.jpg"),
 });
 const lights = new THREE.MeshStandardMaterial({
-  map: loader.load("earth_lights.jpg"),
+  map: loader.load(basePath + "earth_lights.jpg"),
   transparent: true,
   opacity: 0.8,
   blending: THREE.AdditiveBlending,
@@ -47,7 +48,7 @@ const lightsMesh = new THREE.Mesh(geo, lights);
 earth.add(lightsMesh);
 
 const cloudsMat = new THREE.MeshStandardMaterial({
-  map: loader.load("earth_clouds.jpg"),
+  map: loader.load(basePath + "earth_clouds.jpg"),
   transparent: true,
   opacity: 0.3,
   blending: THREE.AdditiveBlending,
@@ -110,7 +111,7 @@ sunGroup.add(dirLight, ambLight);
 
 const sun = new THREE.Mesh(
   geo,
-  new THREE.MeshBasicMaterial({ map: loader.load("sun.jpg") }),
+  new THREE.MeshBasicMaterial({ map: loader.load(basePath + "sun.jpg") }),
 );
 sun.position.copy(sunPos);
 sun.scale.setScalar(2.3);
