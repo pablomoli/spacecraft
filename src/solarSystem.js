@@ -95,8 +95,9 @@ class Earth {
     this.cloudsMesh.rotation.y += 0.0005;
     this.cloudsMesh.rotation.z += 0.0005;
 
-    const orbitRadius = 50;
-    const orbitSpeed = 1;
+    const orbitRadius = 40;
+    // const orbitSpeed = 0.5;
+    const orbitSpeed = 0.5;
 
     const x = Math.cos(time * orbitSpeed) * orbitRadius;
     const z = Math.sin(time * orbitSpeed) * orbitRadius;
@@ -132,7 +133,7 @@ class Sun {
 
     this.dirLight.target = this.dTarget;
 
-    this.ambLight = new THREE.AmbientLight(lightColor, 0.02);
+    this.ambLight = new THREE.AmbientLight(lightColor, 0.05);
 
     this.group.add(this.dirLight, this.ambLight);
     this.group.position.copy(this.pos);
@@ -150,16 +151,19 @@ class Sun {
 
 class Star {
   constructor(scene) {
-    const geometry = new THREE.SphereGeometry(0.1, 24, 24);
+    const geometry = new THREE.SphereGeometry(0.3, 24, 24);
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     this.mesh = new THREE.Mesh(geometry, material);
 
     // random position
-    const [x, y, z] = Array(3)
-      .fill()
-      .map(() => THREE.MathUtils.randFloatSpread(100) * 8);
-    this.mesh.position.set(x, y, z);
+    let x, y, z;
+    do {
+      [x, y, z] = Array(3)
+        .fill()
+        .map(() => THREE.MathUtils.randFloatSpread(1000));
+    } while (Math.sqrt(x * x + y * y + z * z) < 300);
 
+    this.mesh.position.set(x, y, z);
     scene.add(this.mesh);
   }
 }
@@ -254,7 +258,7 @@ class SolarSystem {
       1000,
     );
 
-    this.camera.position.set(0, 30, 100);
+    this.camera.position.set(0, 80, 0);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
     this.scene.add(this.camera);
 
@@ -290,7 +294,7 @@ class SolarSystem {
     this.controls.autoRotateSpeed = -0.5;
 
     // stars
-    this.stars = Array(200)
+    this.stars = Array(1000)
       .fill()
       .map(() => new Star(this.scene));
 
