@@ -9,8 +9,11 @@ const radii = {
   earth: 3,
   sun: 2,
   moon: 3 * 0.5,
+  venus: 3 * 0.95, // Venus is slightly smaller than Earth
+  mars: 3 * 0.53, // Mars is about half the size of Earth
 };
 const axis = 0;
+const rotation = 1;
 
 class Earth {
   constructor(scene, loader) {
@@ -21,6 +24,8 @@ class Earth {
     const geo = new THREE.SphereGeometry(earthRadius, 64, 64);
     const mat = new THREE.MeshStandardMaterial({
       map: loader.load(basePath + "earth.jpg"),
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 1,
     });
 
     this.mesh = new THREE.Mesh(geo, mat);
@@ -87,22 +92,31 @@ class Earth {
     this.fresnelMesh.scale.setScalar(1.03);
     this.group.add(this.fresnelMesh);
 
+    // Initial position in case rotation is disabled
+    this.initialPosition = new THREE.Vector3(40, 0, 0);
+    this.group.position.copy(this.initialPosition);
+
     scene.add(this.group);
   }
 
   update(time) {
+    // Planet rotation on its axis (always happens)
     this.group.rotation.y += 0.003;
     this.cloudsMesh.rotation.y += 0.0005;
     this.cloudsMesh.rotation.z += 0.0005;
 
-    const orbitRadius = 40;
-    // const orbitSpeed = 0.5;
-    const orbitSpeed = 0.5;
+    if (rotation) {
+      // Only orbit around the sun if rotation is enabled
+      const orbitRadius = 40;
+      const orbitSpeed = 0.5;
 
-    const x = Math.cos(time * orbitSpeed) * orbitRadius;
-    const z = Math.sin(time * orbitSpeed) * orbitRadius;
+      const x = Math.cos(time * orbitSpeed) * orbitRadius;
+      const z = Math.sin(time * orbitSpeed) * orbitRadius;
 
-    this.group.position.set(x, 0, z);
+      this.group.position.set(x, 0, z);
+    } else {
+      this.group.position.copy(this.initialPosition);
+    }
   }
 }
 
@@ -230,7 +244,7 @@ class Moon {
     // Rotate moon on its axis (slower than Earth)
     this.mesh.rotation.y += 0.001;
 
-    // Moon orbits around Earth
+    // Moon always orbits around Earth, even if Earth doesn't orbit the sun
     const moonOrbitX = Math.cos(time * this.orbitSpeed) * this.moonDistance;
     const moonOrbitZ = Math.sin(time * this.orbitSpeed) * this.moonDistance;
 
@@ -238,6 +252,232 @@ class Moon {
     this.group.position.x = this.earthGroup.position.x + moonOrbitX;
     this.group.position.y = Math.sin(time) * 2;
     this.group.position.z = this.earthGroup.position.z + moonOrbitZ;
+  }
+}
+
+class Venus {
+  constructor(scene, loader) {
+    this.group = new THREE.Group();
+
+    const venusRadius = radii.venus;
+
+    const geo = new THREE.SphereGeometry(venusRadius, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({
+      map: loader.load(basePath + "venus.jpg"),
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 1,
+    });
+
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.group.add(this.mesh);
+
+    // Venus atmosphere (thick and yellowish)
+    const atmosphere = new THREE.MeshStandardMaterial({
+      map: loader.load(basePath + "venus_atmosphere.jpg"),
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+      roughness: 10,
+    });
+
+    this.atmosphereMesh = new THREE.Mesh(geo, atmosphere);
+    this.atmosphereMesh.scale.setScalar(1.03);
+    this.group.add(this.atmosphereMesh);
+
+    // Fresnel effect for the atmosphere glow
+    const fresnel = new THREE.ShaderMaterial({
+      uniforms: {
+        color: { value: new THREE.Color(0xffd700) }, // Golden/yellow color
+        intensity: { value: 0.15 },
+        power: { value: 2.5 },
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          vViewDir = normalize(-mvPosition.xyz);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 color;
+        uniform float intensity;
+        uniform float power;
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+
+        void main() {
+          float fresnel = pow(1.0 - dot(vNormal, vViewDir), power);
+          vec3 fresnelColor = fresnel * color * intensity;
+          gl_FragColor = vec4(fresnelColor, fresnel);
+        }
+      `,
+      transparent: true,
+      side: THREE.BackSide,
+    });
+
+    this.fresnelMesh = new THREE.Mesh(geo, fresnel);
+    this.fresnelMesh.scale.setScalar(1.05);
+    this.group.add(this.fresnelMesh);
+
+    // Initial position in case rotation is disabled
+    this.initialPosition = new THREE.Vector3(28, 0, 0);
+    this.group.position.copy(this.initialPosition);
+
+    scene.add(this.group);
+  }
+
+  update(time) {
+    // Venus rotates very slowly and in the opposite direction to Earth
+    this.group.rotation.y -= 0.0001;
+    this.atmosphereMesh.rotation.y -= 0.0008;
+    this.atmosphereMesh.rotation.z -= 0.0003;
+
+    if (rotation) {
+      // Only orbit around the sun if rotation is enabled
+      const orbitRadius = 28; // Closer to the sun than Earth
+      const orbitSpeed = 0.7; // Faster than Earth
+
+      const x = Math.cos(time * orbitSpeed) * orbitRadius;
+      const z = Math.sin(time * orbitSpeed) * orbitRadius;
+
+      this.group.position.set(x, 0, z);
+    } else {
+      // Keep at the initial position if rotation is disabled
+      this.group.position.copy(this.initialPosition);
+    }
+  }
+}
+
+class Mars {
+  constructor(scene, loader) {
+    this.group = new THREE.Group();
+
+    const marsRadius = radii.mars;
+
+    const geo = new THREE.SphereGeometry(marsRadius, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({
+      map: loader.load(basePath + "mars.jpg"),
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 1,
+    });
+
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.group.add(this.mesh);
+
+    // Mars dust storms/thin atmosphere
+    const atmosphere = new THREE.MeshStandardMaterial({
+      map: loader.load(basePath + "mars_atmosphere.jpg"),
+      transparent: true,
+      opacity: 0.2,
+      blending: THREE.AdditiveBlending,
+      roughness: 10,
+    });
+
+    this.atmosphereMesh = new THREE.Mesh(geo, atmosphere);
+    this.atmosphereMesh.scale.setScalar(1.02);
+    this.group.add(this.atmosphereMesh);
+
+    // Phobos and Deimos (Mars' moons)
+    // Phobos - larger moon
+    const phobosGeo = new THREE.SphereGeometry(marsRadius * 0.1, 16, 16);
+    const phobosMat = new THREE.MeshStandardMaterial({
+      map: loader.load(basePath + "moon.jpg"),
+      roughness: 1,
+    });
+
+    this.phobosMesh = new THREE.Mesh(phobosGeo, phobosMat);
+    this.phobosOrbit = new THREE.Group();
+    this.phobosOrbit.add(this.phobosMesh);
+    this.group.add(this.phobosOrbit);
+    this.phobosMesh.position.set(marsRadius * 1.5, 0, 0);
+
+    // Deimos - smaller moon
+    const deimosGeo = new THREE.SphereGeometry(marsRadius * 0.05, 16, 16);
+    const deimosMat = new THREE.MeshStandardMaterial({
+      map: loader.load(basePath + "moon.jpg"),
+      roughness: 1,
+    });
+
+    this.deimosMesh = new THREE.Mesh(deimosGeo, deimosMat);
+    this.deimosOrbit = new THREE.Group();
+    this.deimosOrbit.add(this.deimosMesh);
+    this.group.add(this.deimosOrbit);
+    this.deimosMesh.position.set(marsRadius * 2.5, 0, 0);
+
+    // Fresnel effect for the reddish Mars atmosphere
+    const fresnel = new THREE.ShaderMaterial({
+      uniforms: {
+        color: { value: new THREE.Color(0xff4500) }, // Red-orange color
+        intensity: { value: 0.08 },
+        power: { value: 2.0 },
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          vViewDir = normalize(-mvPosition.xyz);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 color;
+        uniform float intensity;
+        uniform float power;
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+
+        void main() {
+          float fresnel = pow(1.0 - dot(vNormal, vViewDir), power);
+          vec3 fresnelColor = fresnel * color * intensity;
+          gl_FragColor = vec4(fresnelColor, fresnel);
+        }
+      `,
+      transparent: true,
+      side: THREE.BackSide,
+    });
+
+    this.fresnelMesh = new THREE.Mesh(geo, fresnel);
+    this.fresnelMesh.scale.setScalar(1.04);
+    this.group.add(this.fresnelMesh);
+
+    // Initial position in case rotation is disabled
+    this.initialPosition = new THREE.Vector3(55, 0, 0);
+    this.group.position.copy(this.initialPosition);
+
+    scene.add(this.group);
+  }
+
+  update(time) {
+    // Mars rotation (similar speed to Earth)
+    this.group.rotation.y += 0.0025;
+    this.atmosphereMesh.rotation.y += 0.001;
+
+    // Phobos orbits quickly (around Mars)
+    this.phobosOrbit.rotation.y += 0.01;
+
+    // Deimos orbits more slowly (around Mars)
+    this.deimosOrbit.rotation.y += 0.005;
+
+    if (rotation) {
+      // Only orbit around the sun if rotation is enabled
+      const orbitRadius = 55; // Further from the sun than Earth
+      const orbitSpeed = 0.4; // Slower than Earth
+
+      const x = Math.cos(time * orbitSpeed) * orbitRadius;
+      const z = Math.sin(time * orbitSpeed) * orbitRadius;
+
+      this.group.position.set(x, 0, z);
+    } else {
+      // Keep at the initial position if rotation is disabled
+      this.group.position.copy(this.initialPosition);
+    }
   }
 }
 
@@ -258,7 +498,7 @@ class SolarSystem {
       1000,
     );
 
-    this.camera.position.set(0, 80, 0);
+    this.camera.position.set(50, 20, 0);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
     this.scene.add(this.camera);
 
@@ -274,12 +514,17 @@ class SolarSystem {
     // loader
     this.loader = new THREE.TextureLoader();
 
+    // venus
+    this.venus = new Venus(this.scene, this.loader);
+
     // earth
     this.earth = new Earth(this.scene, this.loader);
-    this.earth.group.position.set(20, 0, 0);
 
     // moon - add after Earth
     this.moon = new Moon(this.scene, this.loader, this.earth.group);
+
+    // mars
+    this.mars = new Mars(this.scene, this.loader);
 
     // sun
     this.sun = new Sun(this.scene, this.loader);
@@ -305,6 +550,23 @@ class SolarSystem {
     window.addEventListener("resize", () => this.onResize());
   }
 
+  // Update the animate method to include Venus and Mars
+  animate() {
+    const t = performance.now() * 0.001;
+    requestAnimationFrame(() => this.animate());
+
+    this.controls.update();
+
+    this.venus.update(t + 100);
+    this.earth.update(t);
+    this.moon.update(t);
+    this.mars.update(t + 500);
+    this.sun.update(this.earth.group.position);
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  // The rest of the class remains unchanged
   onResize() {
     this.sizes.width = window.innerWidth;
     this.sizes.height = window.innerHeight;
@@ -313,19 +575,6 @@ class SolarSystem {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize(this.sizes.width, this.sizes.height);
-  }
-
-  animate() {
-    const t = performance.now() * 0.001;
-    requestAnimationFrame(() => this.animate());
-
-    this.controls.update();
-
-    this.earth.update(t);
-    this.moon.update(t);
-    this.sun.update(this.earth.group.position);
-
-    this.renderer.render(this.scene, this.camera);
   }
 
   start() {
