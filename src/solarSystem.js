@@ -148,8 +148,9 @@ class Sun {
     this.dirLight.target = this.dTarget;
 
     this.ambLight = new THREE.AmbientLight(lightColor, 0.05);
+    this.pointLight = new THREE.PointLight(lightColor, 1, 100, 2);
 
-    this.group.add(this.dirLight, this.ambLight);
+    this.group.add(this.dirLight, this.ambLight, this.pointLight);
     this.group.position.copy(this.pos);
 
     scene.add(this.group);
