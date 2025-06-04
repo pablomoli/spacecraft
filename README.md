@@ -1,70 +1,127 @@
-# Getting Started with Create React App
+# Spacecraft Portfolio
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, interactive portfolio website built with Next.js and Three.js, featuring immersive 3D experiences and smooth animations.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+- **Interactive 3D Graphics** - Built with React Three Fiber and Three.js
+- **Smooth Animations** - GSAP-powered transitions and effects
+- **Responsive Design** - Optimized for all devices and screen sizes
+- **Modern Stack** - Next.js 14 with React 18
+- **Performance Optimized** - Static generation and optimized builds
+- **SEO Ready** - Built-in Next.js SEO capabilities
 
-### `npm start`
+## 🛠️ Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Framework:** Next.js 14
+- **Frontend:** React 18
+- **3D Graphics:** Three.js, React Three Fiber, Drei
+- **Animations:** GSAP
+- **Styling:** CSS/Styled Components
+- **Language:** TypeScript
+- **Deployment:** Static Export Ready
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🏃‍♂️ Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js 18+
+- npm or yarn
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+git clone https://github.com/pablomoli/spacecraft
+cd spacecraft
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Install dependencies:
 
-### `npm run eject`
+```bash
+npm install
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+3. Run the development server:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm run dev
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📦 Available Scripts
 
-## Learn More
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run export` - Export static files for deployment
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🚢 Deployment
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+This project is configured for static export, making it deployable to:
 
-### Code Splitting
+- **Vercel** (recommended for Next.js)
+- **Netlify**
+- **GitHub Pages**
+- **AWS S3**
+- Any static hosting service
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Deploy to Vercel
 
-### Analyzing the Bundle Size
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Deploy automatically on every push
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Static Export
 
-### Making a Progressive Web App
+```bash
+npm run export
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+The `out` folder will contain the static files ready for deployment.
 
-### Advanced Configuration
+## 🎨 Customization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- **3D Models**: Add your models to `/public/models/`
+- **Textures**: Store textures in `/public/textures/`
+- **Content**: Update portfolio content in `/src/components/`
+- **Styling**: Modify styles in component files
+- **Animations**: Customize GSAP animations in `/src/animations/`
 
-### Deployment
+## 📁 Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```
+spacecraft/
+├── public/          # Static assets
+├── src/
+│   ├── components/  # React components
+│   ├── pages/       # Next.js pages
+│   ├── styles/      # Stylesheets
+│   └── utils/       # Utility functions
+├── package.json
+└── next.config.mjs
+```
 
-### `npm run build` fails to minify
+## 🤝 Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🐛 Issues
+
+If you encounter any issues or have suggestions, please [open an issue](https://github.com/yourusername/spacecraft/issues).
+
+---
+
+**Built with ❤️ using Next.js and Three.js**
+
