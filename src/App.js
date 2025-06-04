@@ -1,23 +1,27 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Canvas } from "@react-three/fiber";
+import { useScroll } from "./hooks/useScroll";
+import Overlay from "./components/Overlay";
+import NavBar from "./components/NavBar";
+import SocialLinks from "./components/SocialLinks";
+import Scene from "./components/Scene";
 
 function App() {
+  const scrollData = useScroll();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <Canvas className="canvas">
+        <Scene scrollProgress={scrollData.scrollProgress} />
+      </Canvas>
+
+      <NavBar currentSection={scrollData.currentSection} />
+      <SocialLinks />
+
+      <Overlay
+        scroll={scrollData.scrollProgress}
+        onSectionChange={scrollData.handleSectionChange}
+      />
     </div>
   );
 }
