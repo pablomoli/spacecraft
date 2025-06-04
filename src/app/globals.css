@@ -227,7 +227,7 @@
     gap: 1.5rem;
   }
 }
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+/* Space Grotesk font loaded via Next.js next/font */
 
 * {
   margin: 0;
