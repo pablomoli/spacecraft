@@ -1,0 +1,29 @@
+# Fix language detection
+*.js linguist-language=JavaScript
+*.jsx linguist-language=JavaScript  
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.json linguist-language=JSON
+*.html linguist-language=HTML
+*.css linguist-language=CSS
+*.md linguist-language=Markdown
+*.yml linguist-language=YAML
+*.yaml linguist-language=YAML
+
+# Mark generated/build files as generated (excluded from stats)
+.next/** linguist-generated=true
+out/** linguist-generated=true
+node_modules/** linguist-vendored=true
+
+# Ensure config files are properly detected
+next.config.mjs linguist-language=JavaScript
+*.config.js linguist-language=JavaScript
+*.config.mjs linguist-language=JavaScript
+
+# Mark cache and pack files as generated
+*.pack linguist-generated=true
+*.pack.old linguist-generated=true
+
+# Ensure webpack chunks are marked as generated
+**/webpack-runtime.js linguist-generated=true
+**/*.chunk.js linguist-generated=true
