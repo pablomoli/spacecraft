@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import { TextureLoader } from "three";
@@ -7,12 +7,47 @@ export default function Earth() {
   const groupRef = useRef();
   const cloudsRef = useRef();
   const geo = new THREE.SphereGeometry(3, 64, 64);
+  const [highResLoaded, setHighResLoaded] = useState(false);
 
-  const [earthMap, lightsMap, cloudsMap] = useLoader(TextureLoader, [
-    "/earth.jpg",
-    "/earth_lights.jpg",
-    "/earth_clouds.jpg",
+  // Load low-res textures immediately
+  const [earthMapLow, lightsMapLow, cloudsMapLow] = useLoader(TextureLoader, [
+    "/earth-lowres.webp",
+    "/earth_lights-lowres.webp",
+    "/earth_clouds-lowres.webp",
   ]);
+
+  // Load high-res textures
+  const [earthMap, lightsMap, cloudsMap] = useLoader(TextureLoader, [
+    "/earth.webp",
+    "/earth_lights.webp",
+    "/earth_clouds_ultra.webp",
+  ]);
+
+  // Optimize texture settings for both low and high res
+  const optimizeTextures = (textures) => {
+    textures.forEach((texture) => {
+      if (texture) {
+        texture.generateMipmaps = true;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      }
+    });
+  };
+
+  optimizeTextures([earthMapLow, lightsMapLow, cloudsMapLow]);
+  optimizeTextures([earthMap, lightsMap, cloudsMap]);
+
+  // Switch to high-res after a short delay
+  useEffect(() => {
+    const timer = setTimeout(() => setHighResLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Use high-res if loaded, otherwise low-res
+  const currentEarthMap = highResLoaded && earthMap ? earthMap : earthMapLow;
+  const currentLightsMap = highResLoaded && lightsMap ? lightsMap : lightsMapLow;
+  const currentCloudsMap = highResLoaded && cloudsMap ? cloudsMap : cloudsMapLow;
   useFrame(() => {
     if (cloudsRef.current) {
       cloudsRef.current.rotation.y += 0.0002;
@@ -59,13 +94,13 @@ export default function Earth() {
     <group ref={groupRef}>
       {/* Base Earth */}
       <mesh geometry={geo}>
-        <meshStandardMaterial map={earthMap} />
+        <meshStandardMaterial map={currentEarthMap} />
       </mesh>
 
       {/* Lights Layer */}
       <mesh geometry={geo}>
         <meshStandardMaterial
-          map={lightsMap}
+          map={currentLightsMap}
           transparent
           opacity={0.8}
           blending={THREE.AdditiveBlending}
@@ -75,7 +110,7 @@ export default function Earth() {
       {/* Cloud Layer */}
       <mesh geometry={geo} scale={[1.01, 1.01, 1.01]} ref={cloudsRef}>
         <meshStandardMaterial
-          map={cloudsMap}
+          map={currentCloudsMap}
           transparent
           opacity={0.3}
           roughness={10}
