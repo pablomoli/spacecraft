@@ -1,9 +1,9 @@
-import React, { forwardRef, useState, useEffect, useRef } from "react";
+import React, { forwardRef, useState, useEffect, useRef, useMemo } from "react";
 import { gsap } from "gsap";
 
 // GSAP Glitch Subtitle Component
 function GlitchSubtitle() {
-  const subtitles = [
+  const subtitles = useMemo(() => [
     "Space Explorer & Developer",
     "Full-Stack Developer",
     "Cosmic Code Creator",
@@ -11,7 +11,7 @@ function GlitchSubtitle() {
     "Sci-Fi Enthusiast",
     "Builder of Digital Worlds",
     "CAD Drafter",
-  ];
+  ], []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const textRef = useRef(null);
@@ -63,7 +63,7 @@ function GlitchSubtitle() {
     return () => {
       tl.kill();
     };
-  }, []);
+  }, [subtitles]);
 
   // Random glitch effect every few seconds
   useEffect(() => {
@@ -401,7 +401,7 @@ const sections = [
   },
 ];
 
-const Overlay = forwardRef(({ scroll, onSectionChange }, ref) => {
+const Overlay = forwardRef(function Overlay({ scroll, onSectionChange }, ref) {
   const handleScroll = (e) => {
     const container = e.target;
     const scrollTop = container.scrollTop;

@@ -7,6 +7,7 @@ import Overlay from "../components/Overlay";
 import NavBar from "../components/NavBar";
 import SocialLinks from "../components/SocialLinks";
 import Scene from "../components/Scene";
+import StarField from "../components/StarField";
 
 // Simple loading component for Suspense fallback
 function LoadingFallback() {
@@ -23,6 +24,7 @@ export default function Home() {
 
   return (
     <div className="app">
+      <StarField count={200} />
       <Canvas className="canvas">
         <Suspense fallback={<LoadingFallback />}>
           <Scene scrollProgress={scrollData.scrollProgress} />
