@@ -5,6 +5,10 @@ export default function TextPressure({
   strength = 8, 
   radius = 80, 
   className = "",
+  width = true,
+  weight = true,
+  widthRange = [0.8, 1.2],    // [min, max] width multiplier
+  weightRange = [300, 800],   // [min, max] font weight
   style = {},
   ...props 
 }) {
@@ -16,6 +20,15 @@ export default function TextPressure({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const charRefs = useRef([]);
+  const originalFontWeight = useRef(null);
+
+  // Capture original font weight on mount
+  useEffect(() => {
+    if (containerRef.current && originalFontWeight.current === null) {
+      const computedStyle = getComputedStyle(containerRef.current);
+      originalFontWeight.current = computedStyle.fontWeight || '400';
+    }
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -42,10 +55,18 @@ export default function TextPressure({
     const handleMouseEnter = () => setIsHovering(true);
     const handleMouseLeave = () => {
       setIsHovering(false);
-      // Reset all character positions
+      // Reset all character positions, width, and weight
       charRefs.current.forEach(char => {
         if (char) {
-          char.style.transform = 'translateX(0px) translateY(0px)';
+          let transforms = 'translateX(0px) translateY(0px)';
+          if (width) {
+            transforms += ' scaleX(1)';
+          }
+          char.style.transform = transforms;
+          
+          if (weight) {
+            char.style.fontWeight = originalFontWeight.current || '400';
+          }
         }
       });
     };
@@ -53,10 +74,18 @@ export default function TextPressure({
     const handleTouchStart = () => setIsHovering(true);
     const handleTouchEnd = () => {
       setIsHovering(false);
-      // Reset all character positions
+      // Reset all character positions, width, and weight
       charRefs.current.forEach(char => {
         if (char) {
-          char.style.transform = 'translateX(0px) translateY(0px)';
+          let transforms = 'translateX(0px) translateY(0px)';
+          if (width) {
+            transforms += ' scaleX(1)';
+          }
+          char.style.transform = transforms;
+          
+          if (weight) {
+            char.style.fontWeight = originalFontWeight.current || '400';
+          }
         }
       });
     };
@@ -101,14 +130,39 @@ export default function TextPressure({
         const displaceX = -Math.cos(angle) * force * adjustedStrength;
         const displaceY = -Math.sin(angle) * force * adjustedStrength;
 
-        char.style.transform = `translateX(${displaceX}px) translateY(${displaceY}px)`;
-        char.style.transition = 'transform 0.1s ease-out';
+        // Calculate dynamic width and weight based on proximity
+        let transforms = `translateX(${displaceX}px) translateY(${displaceY}px)`;
+        
+        if (width) {
+          const [minWidth, maxWidth] = widthRange;
+          const currentWidth = minWidth + (maxWidth - minWidth) * force;
+          transforms += ` scaleX(${currentWidth})`;
+        }
+        
+        if (weight) {
+          const [minWeight, maxWeight] = weightRange;
+          const currentWeight = Math.round(minWeight + (maxWeight - minWeight) * force);
+          char.style.fontWeight = currentWeight;
+        }
+
+        char.style.transform = transforms;
+        char.style.transition = 'transform 0.1s ease-out, font-weight 0.1s ease-out';
       } else {
-        char.style.transform = 'translateX(0px) translateY(0px)';
-        char.style.transition = 'transform 0.3s ease-out';
+        let transforms = 'translateX(0px) translateY(0px)';
+        
+        if (width) {
+          transforms += ' scaleX(1)';
+        }
+        
+        if (weight) {
+          char.style.fontWeight = originalFontWeight.current || '400';
+        }
+        
+        char.style.transform = transforms;
+        char.style.transition = 'transform 0.3s ease-out, font-weight 0.3s ease-out';
       }
     });
-  }, [mousePos, isHovering, adjustedStrength, adjustedRadius]);
+  }, [mousePos, isHovering, adjustedStrength, adjustedRadius, width, weight, widthRange, weightRange]);
 
   const characters = text.split('').map((char, index) => (
     <span

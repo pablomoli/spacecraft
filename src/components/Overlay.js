@@ -443,6 +443,10 @@ const Overlay = forwardRef(function Overlay({ scroll, onSectionChange }, ref) {
                   text={section.title}
                   strength={8}
                   radius={80}
+                  width={true}
+                  weight={true}
+                  widthRange={[0.7, 1.3]}
+                  weightRange={[200, 900]}
                   style={{
                     fontSize: 'inherit',
                     fontWeight: 'inherit',
