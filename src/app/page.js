@@ -4,8 +4,8 @@ import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useScroll } from "../hooks/useScroll";
 import Overlay from "../components/Overlay";
-import NavBar from "../components/NavBar";
-import SocialLinks from "../components/SocialLinks";
+import MagneticNavBar from "../components/MagneticNavBar";
+import MagneticSocialLinks from "../components/MagneticSocialLinks";
 import Scene from "../components/Scene";
 import StarField from "../components/StarField";
 
@@ -31,8 +31,8 @@ export default function Home() {
         </Suspense>
       </Canvas>
 
-      <NavBar currentSection={scrollData.currentSection} />
-      <SocialLinks />
+      <MagneticNavBar currentSection={scrollData.currentSection} />
+      <MagneticSocialLinks />
 
       <Overlay
         scroll={scrollData.scrollProgress}
