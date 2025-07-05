@@ -1,5 +1,6 @@
 import React, { forwardRef, useState, useEffect, useRef, useMemo } from "react";
 import { gsap } from "gsap";
+import TextPressure from "./TextPressure";
 
 // GSAP Glitch Subtitle Component
 function GlitchSubtitle() {
@@ -436,7 +437,23 @@ const Overlay = forwardRef(function Overlay({ scroll, onSectionChange }, ref) {
       {sections.map((section, i) => (
         <div key={section.id} className="section" id={section.id}>
           <div className="dot">
-            <h1>{section.title}</h1>
+            {section.id === "hero" ? (
+              <h1>
+                <TextPressure 
+                  text={section.title}
+                  strength={8}
+                  radius={80}
+                  style={{
+                    fontSize: 'inherit',
+                    fontWeight: 'inherit',
+                    color: 'inherit',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </h1>
+            ) : (
+              <h1>{section.title}</h1>
+            )}
             {/* Conditional subtitle rendering */}
             {section.id === "hero" ? (
               <GlitchSubtitle />
