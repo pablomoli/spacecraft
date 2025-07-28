@@ -227,6 +227,18 @@
     gap: 1.5rem;
   }
 }
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 /* Space Grotesk font loaded via Next.js next/font */
 
 * {
@@ -294,8 +306,15 @@ body::before {
   pointer-events: auto;
 }
 
-.scroll > div {
+.scroll > div:not(.extra-section) {
   scroll-snap-align: start;
+}
+
+/* Ensure extra section is scrollable */
+.extra-section {
+  scroll-snap-align: none !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
 }
 
 /* Section containers */
@@ -837,4 +856,17 @@ body::before {
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.5);
   text-align: left;
+}
+
+/* Extra section for wormhole trigger */
+.extra-section {
+  background: transparent;
+  pointer-events: none;
+}
+
+.venture-text {
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
