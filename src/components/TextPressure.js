@@ -105,7 +105,7 @@ export default function TextPressure({
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [width, weight]);
 
   useEffect(() => {
     if (!isHovering) return;

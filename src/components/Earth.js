@@ -49,8 +49,11 @@ export default function Earth() {
   const currentLightsMap = highResLoaded && lightsMap ? lightsMap : lightsMapLow;
   const currentCloudsMap = highResLoaded && cloudsMap ? cloudsMap : cloudsMapLow;
   useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += 0.0002;
+    }
     if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += 0.0002;
+      cloudsRef.current.rotation.y += 0.0004;
     }
   });
 
