@@ -175,7 +175,7 @@ export default function Galaxy({
   rotation = [1.0, 0.0],
   starSpeed = 0.5,
   density = 1,
-  hueShift = 140,
+  hueShift = 0,  // Default to 0 for white stars
   disableAnimation = false,
   speed = 1.0,
   mouseInteraction = true,
@@ -197,7 +197,7 @@ export default function Galaxy({
 
   useEffect(() => {
     if (!ctnDom.current) return;
-    console.log('Galaxy component mounting');
+
     const ctn = ctnDom.current;
     const renderer = new Renderer({
       alpha: transparent,
@@ -282,6 +282,12 @@ export default function Galaxy({
       program.uniforms.uGlowIntensity.value = glowIntensity;
       program.uniforms.uRotationSpeed.value = rotationSpeed;
       program.uniforms.uAutoCenterRepulsion.value = autoCenterRepulsion;
+      program.uniforms.uSaturation.value = saturation;
+      program.uniforms.uHueShift.value = hueShift;
+      program.uniforms.uTwinkleIntensity.value = twinkleIntensity;
+      program.uniforms.uRepulsionStrength.value = repulsionStrength;
+      program.uniforms.uMouseRepulsion.value = mouseRepulsion;
+      program.uniforms.uStarSpeed.value = starSpeed;
 
       const lerpFactor = 0.05;
       smoothMousePos.current.x +=
@@ -319,7 +325,7 @@ export default function Galaxy({
     }
 
     return () => {
-      console.log('Galaxy component unmounting');
+
       cancelAnimationFrame(animateId);
       window.removeEventListener("resize", resize);
       if (mouseInteraction) {

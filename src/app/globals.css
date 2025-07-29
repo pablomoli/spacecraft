@@ -313,8 +313,25 @@ body::before {
 /* Ensure extra section is scrollable */
 .extra-section {
   scroll-snap-align: none !important;
+  height: 200vh !important;
+  min-height: 200vh !important;
+}
+
+/* Venture button section override */
+.venture-section {
   height: 100vh !important;
   min-height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+}
+
+/* Venture button styling */
+.venture-button {
+  z-index: 50 !important;
+  pointer-events: auto !important;
+  position: relative !important;
 }
 
 /* Section containers */
@@ -869,4 +886,14 @@ body::before {
   font-weight: 300;
   letter-spacing: 2px;
   text-transform: uppercase;
+}
+
+/* Galaxy container styles */
+.galaxy-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
 }

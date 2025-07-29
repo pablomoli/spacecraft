@@ -403,10 +403,11 @@ const sections = [
 ];
 
 const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrollContainerRef }, ref) {
-  const ventureTextRef = useRef(null);
   const [isScrollLocked, setIsScrollLocked] = useState(false);
 
   const triggerWormholeAnimation = useCallback(() => {
+    // Trigger the wormhole animation
+    scrollData.triggerWormhole();
     setIsScrollLocked(true);
     lenisRef.current?.stop(); // Stop Lenis scroll
 
@@ -416,7 +417,7 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
     };
     window.addEventListener('keydown', handleKeydown);
 
-    // After 3 seconds, reset everything
+    // After 2.6 seconds (matching animation duration), reset everything
     setTimeout(() => {
       lenisRef.current?.scrollTo(0, { immediate: true }); // Reset scroll to top
       
@@ -427,31 +428,10 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
       // Re-enable keyboard
       window.removeEventListener('keydown', handleKeydown);
       lenisRef.current?.start(); // Resume Lenis scroll
-    }, 3000);
+    }, 2600);
   }, [lenisRef, scrollData]);
 
-  // The main scroll logic is now in page.js, so we just need to check for the trigger
-  useEffect(() => {
-    const checkWormholeTrigger = () => {
-      if (scrollData.extraScrollProgress.current >= 1 && !scrollData.wormholeTriggered) {
-        scrollData.triggerWormhole();
-        triggerWormholeAnimation();
-      }
-    };
-    // Poll for the trigger condition
-    const interval = setInterval(checkWormholeTrigger, 50);
-    return () => clearInterval(interval);
-  }, [scrollData, scrollData.wormholeTriggered, triggerWormholeAnimation]);
-
-  // Animate "Venture beyond the known" text when entering extra section
-  useEffect(() => {
-    if (scrollData.scrollPhase === 'extra' && ventureTextRef.current) {
-      gsap.fromTo(ventureTextRef.current,
-        { x: '100%', opacity: 0 },
-        { x: '0%', opacity: 1, duration: 1, ease: "power2.out" }
-      );
-    }
-  }, [scrollData.scrollPhase]);
+  // Remove scroll-based triggers since we're using a button now
 
   return (
     <div ref={(el) => {
@@ -521,25 +501,49 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
         </div>
       ))}
       
-      {/* Extra scroll section for wormhole trigger */}
-      <div className="extra-section" style={{ 
-        height: '100vh', 
-        minHeight: '100vh',
-        position: 'relative', 
+      {/* Extra section with button trigger */}
+      <div className="section extra-section venture-section" style={{ 
+        height: '100vh !important', 
+        minHeight: '100vh !important',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'auto',
+        zIndex: 2
       }}>
-        <div className="venture-text" ref={ventureTextRef} style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontSize: '2rem',
-          opacity: 0,
-          color: 'rgba(255, 255, 255, 0.8)',
-          fontFamily: 'inherit',
-          pointerEvents: 'none'
-        }}>
-          Venture beyond the known...
-        </div>
+        <button 
+          className="venture-button"
+          onClick={triggerWormholeAnimation}
+          style={{
+            fontSize: '2rem',
+            color: 'rgba(255, 255, 255, 0.9)',
+            background: 'transparent',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '50px',
+            padding: '1rem 3rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            fontFamily: 'inherit',
+            backdropFilter: 'blur(10px)',
+            position: 'relative',
+            overflow: 'hidden',
+            zIndex: 10,
+            pointerEvents: 'auto'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.borderColor = 'rgba(100, 181, 246, 0.8)';
+            e.target.style.transform = 'scale(1.05)';
+            e.target.style.boxShadow = '0 0 30px rgba(100, 181, 246, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            e.target.style.transform = 'scale(1)';
+            e.target.style.boxShadow = 'none';
+          }}
+        >
+          Venture beyond the known
+        </button>
       </div>
     </div>
   );
