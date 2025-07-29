@@ -32,6 +32,21 @@ function LoadingFallback() {
 
 // Wormhole progress indicator component
 function WormholeProgress({ progress }) {
+  // Calculate which phase we're in based on the animation timeline
+  // Total duration: 0.5 + 2 + 0.1 = 2.6s
+  // Phase 1 (charge up): 0 - 0.5s (0% - 19.2%)
+  // Phase 2 (hold): 0.5 - 2.5s (19.2% - 96.2%)
+  // Phase 3 (return): 2.5 - 2.6s (96.2% - 100%)
+  
+  const getPhaseProgress = () => {
+    if (progress < 0.192) return 0; // Charging
+    if (progress < 0.5) return 1; // Mid-wormhole
+    if (progress < 0.962) return 2; // Full wormhole
+    return 3; // Returning
+  };
+  
+  const phase = getPhaseProgress();
+  
   return (
     <div
       style={{
@@ -53,10 +68,10 @@ function WormholeProgress({ progress }) {
             height: "12px",
             borderRadius: "50%",
             backgroundColor: "rgba(255, 255, 255, 0.8)",
-            opacity: progress > index / 3 ? 1 : 0.3,
+            opacity: phase > index ? 1 : 0.3,
             transition: "opacity 0.3s ease",
             boxShadow:
-              progress > index / 3
+              phase > index
                 ? "0 0 10px rgba(255, 255, 255, 0.8)"
                 : "none",
           }}
@@ -312,7 +327,7 @@ export default function Home() {
               starSpeed: animationProxyRef.current.starSpeed,
             }
           });
-          setWormholeProgress(animationProxyRef.current.progress);
+          // Progress is now updated in timeline onUpdate
           lastUpdateTime = timestamp;
         }
       };
@@ -320,6 +335,10 @@ export default function Home() {
       const tl = gsap.timeline({
         onUpdate: () => {
           rafIdRef.current = requestAnimationFrame(updateConfig);
+          // Update progress based on timeline progress
+          if (wormholeTimelineRef.current) {
+            setWormholeProgress(wormholeTimelineRef.current.progress());
+          }
         },
         onComplete: () => {
           // Cleanup on natural completion

@@ -153,7 +153,7 @@ void main() {
   vec3 col = vec3(0.0);
 
   for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
-    float depth = fract(i + uStarSpeed * uSpeed);
+    float depth = fract(i + uTime * uStarSpeed);
     float scale = mix(20.0 * uDensity, 0.5 * uDensity, depth);
     float fade = depth * smoothstep(1.0, 0.9, depth);
     col += StarLayer(uv * scale + i * 453.32) * fade;
@@ -273,7 +273,6 @@ export default function Galaxy({
       animateId = requestAnimationFrame(update);
       if (!disableAnimation) {
         program.uniforms.uTime.value = t * 0.001;
-        program.uniforms.uStarSpeed.value = (t * 0.001 * starSpeed) / 10.0;
       }
       
       // Update uniforms with current prop values
@@ -287,7 +286,7 @@ export default function Galaxy({
       program.uniforms.uTwinkleIntensity.value = twinkleIntensity;
       program.uniforms.uRepulsionStrength.value = repulsionStrength;
       program.uniforms.uMouseRepulsion.value = mouseRepulsion;
-      program.uniforms.uStarSpeed.value = starSpeed;
+      program.uniforms.uStarSpeed.value = starSpeed * speed * 0.1;
 
       const lerpFactor = 0.05;
       smoothMousePos.current.x +=
