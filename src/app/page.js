@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useRef,
   useMemo,
+  useReducer,
 } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useScroll } from "../hooks/useScroll";
@@ -65,10 +66,26 @@ function WormholeProgress({ progress }) {
   );
 }
 
+// Galaxy config reducer for batched updates
+const galaxyConfigReducer = (state, action) => {
+  switch (action.type) {
+    case 'UPDATE_ALL':
+      return { ...state, ...action.payload };
+    case 'RESET':
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
 export default function Home() {
   const scrollData = useScroll();
   const overlayRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const wormholeTimelineRef = useRef(null);
+  const animationProxyRef = useRef(null);
+  const rafIdRef = useRef(null);
+  
   const initialGalaxyConfig = useMemo(
     () => ({
       density: DEFAULT_GALAXY_SETTINGS.density,
@@ -87,7 +104,10 @@ export default function Home() {
     [],
   );
 
-  const [galaxyConfig, setGalaxyConfig] = useState(initialGalaxyConfig);
+  const [galaxyConfig, dispatchGalaxyConfig] = useReducer(
+    galaxyConfigReducer,
+    initialGalaxyConfig
+  );
   const [wormholeProgress, setWormholeProgress] = useState(0);
   const [showUI, setShowUI] = useState(true);
 
@@ -181,7 +201,6 @@ export default function Home() {
         throttleRef.current = null;
       }, 16);
       const scrollTop = e.scroll;
-      const scrollHeight = e.limit;
 
       // Ensure heights are measured
       if (!heightMeasurements.current.isInitialized) {
@@ -243,11 +262,23 @@ export default function Home() {
   // Handle wormhole animation
   useEffect(() => {
     if (scrollData.scrollPhase === "wormhole") {
+      // Kill any existing timeline
+      if (wormholeTimelineRef.current) {
+        wormholeTimelineRef.current.kill();
+        wormholeTimelineRef.current = null;
+      }
+      
+      // Cancel any pending RAF
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+
       setShowUI(false);
 
-      // Create a proxy object for GSAP to animate with all parameters
-      const animationProxy = { 
-        ...galaxyConfig, 
+      // Create animation proxy with initial values
+      animationProxyRef.current = { 
+        ...initialGalaxyConfig, 
         progress: 0,
         mouseInteraction: false,
         mouseRepulsion: false,
@@ -255,51 +286,84 @@ export default function Home() {
         hueShift: 0,
         saturation: 0,
         repulsionStrength: 2,
-        starSpeed: 0.5,  // Add initial starSpeed
+        starSpeed: 0.5,
+      };
+
+      // Throttled update function
+      let lastUpdateTime = 0;
+      const UPDATE_INTERVAL = 16; // ~60fps
+
+      const updateConfig = (timestamp) => {
+        if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
+          dispatchGalaxyConfig({
+            type: 'UPDATE_ALL',
+            payload: {
+              density: animationProxyRef.current.density,
+              speed: animationProxyRef.current.speed,
+              glowIntensity: animationProxyRef.current.glowIntensity,
+              rotationSpeed: animationProxyRef.current.rotationSpeed,
+              autoCenterRepulsion: animationProxyRef.current.autoCenterRepulsion,
+              mouseInteraction: animationProxyRef.current.mouseInteraction,
+              mouseRepulsion: animationProxyRef.current.mouseRepulsion,
+              twinkleIntensity: animationProxyRef.current.twinkleIntensity,
+              hueShift: animationProxyRef.current.hueShift,
+              saturation: animationProxyRef.current.saturation,
+              repulsionStrength: animationProxyRef.current.repulsionStrength,
+              starSpeed: animationProxyRef.current.starSpeed,
+            }
+          });
+          setWormholeProgress(animationProxyRef.current.progress);
+          lastUpdateTime = timestamp;
+        }
       };
 
       const tl = gsap.timeline({
         onUpdate: () => {
-          // Update state with all animated values
-          setGalaxyConfig({
-            density: animationProxy.density,
-            speed: animationProxy.speed,
-            glowIntensity: animationProxy.glowIntensity,
-            rotationSpeed: animationProxy.rotationSpeed,
-            autoCenterRepulsion: animationProxy.autoCenterRepulsion,
-            mouseInteraction: animationProxy.mouseInteraction,
-            mouseRepulsion: animationProxy.mouseRepulsion,
-            twinkleIntensity: animationProxy.twinkleIntensity,
-            hueShift: animationProxy.hueShift,
-            saturation: animationProxy.saturation,
-            repulsionStrength: animationProxy.repulsionStrength,
-            starSpeed: animationProxy.starSpeed,  // Add starSpeed to config update
-          });
-          setWormholeProgress(animationProxy.progress);
+          rafIdRef.current = requestAnimationFrame(updateConfig);
         },
+        onComplete: () => {
+          // Cleanup on natural completion
+          setShowUI(true);
+          setWormholeProgress(0);
+          dispatchGalaxyConfig({
+            type: 'RESET',
+            payload: initialGalaxyConfig
+          });
+          wormholeTimelineRef.current = null;
+          if (rafIdRef.current) {
+            cancelAnimationFrame(rafIdRef.current);
+            rafIdRef.current = null;
+          }
+        }
       });
 
+      wormholeTimelineRef.current = tl;
+
       // Animate to wormhole state
-      tl.to(animationProxy, {
+      tl.to(animationProxyRef.current, {
         duration: WORMHOLE_ANIMATION_CONFIG.chargeUp.duration,
         ...WORMHOLE_ANIMATION_CONFIG.chargeUp.settings,
         ease: WORMHOLE_ANIMATION_CONFIG.chargeUp.ease,
       })
-        .to(animationProxy, {
-          duration: WORMHOLE_ANIMATION_CONFIG.hold.duration,
-          progress: WORMHOLE_ANIMATION_CONFIG.hold.progress,
-        })
-        .to(animationProxy, {
-          duration: WORMHOLE_ANIMATION_CONFIG.return.duration,
-          ...WORMHOLE_ANIMATION_CONFIG.return.settings,
-          onComplete: () => {
-            setShowUI(true);
-            setWormholeProgress(0);
-            setGalaxyConfig(initialGalaxyConfig);
-          },
-        });
+      .to(animationProxyRef.current, {
+        duration: WORMHOLE_ANIMATION_CONFIG.hold.duration,
+        progress: WORMHOLE_ANIMATION_CONFIG.hold.progress,
+      })
+      .to(animationProxyRef.current, {
+        duration: WORMHOLE_ANIMATION_CONFIG.return.duration,
+        ...WORMHOLE_ANIMATION_CONFIG.return.settings,
+      });
 
-      return () => tl.kill();
+      return () => {
+        if (wormholeTimelineRef.current) {
+          wormholeTimelineRef.current.kill();
+          wormholeTimelineRef.current = null;
+        }
+        if (rafIdRef.current) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+      };
     }
   }, [scrollData.scrollPhase, initialGalaxyConfig]);
 

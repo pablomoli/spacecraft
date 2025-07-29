@@ -404,32 +404,58 @@ const sections = [
 
 const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrollContainerRef }, ref) {
   const [isScrollLocked, setIsScrollLocked] = useState(false);
+  const isAnimatingRef = useRef(false);
+  const keydownHandlerRef = useRef(null);
+  const animationTimeoutRef = useRef(null);
 
   const triggerWormholeAnimation = useCallback(() => {
-    // Trigger the wormhole animation
+    // Prevent overlapping animations
+    if (isAnimatingRef.current) return;
+    
+    isAnimatingRef.current = true;
     scrollData.triggerWormhole();
     setIsScrollLocked(true);
     lenisRef.current?.stop(); // Stop Lenis scroll
 
-    // Disable keyboard navigation
+    // Store the event handler reference
     const handleKeydown = (e) => {
       e.preventDefault();
     };
+    keydownHandlerRef.current = handleKeydown;
     window.addEventListener('keydown', handleKeydown);
 
-    // After 2.6 seconds (matching animation duration), reset everything
-    setTimeout(() => {
+    // Store timeout reference for cleanup
+    animationTimeoutRef.current = setTimeout(() => {
       lenisRef.current?.scrollTo(0, { immediate: true }); // Reset scroll to top
       
       // Reset state
       scrollData.resetToHero();
       setIsScrollLocked(false);
       
-      // Re-enable keyboard
-      window.removeEventListener('keydown', handleKeydown);
+      // Clean up event listener
+      if (keydownHandlerRef.current) {
+        window.removeEventListener('keydown', keydownHandlerRef.current);
+        keydownHandlerRef.current = null;
+      }
+      
       lenisRef.current?.start(); // Resume Lenis scroll
+      isAnimatingRef.current = false;
+      animationTimeoutRef.current = null;
     }, 2600);
   }, [lenisRef, scrollData]);
+
+  // Add cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up on unmount
+      if (keydownHandlerRef.current) {
+        window.removeEventListener('keydown', keydownHandlerRef.current);
+      }
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Remove scroll-based triggers since we're using a button now
 
@@ -515,6 +541,7 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
         <button 
           className="venture-button"
           onClick={triggerWormholeAnimation}
+          disabled={isAnimatingRef.current}
           style={{
             fontSize: '2rem',
             color: 'rgba(255, 255, 255, 0.9)',
@@ -522,7 +549,8 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
             border: '2px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '50px',
             padding: '1rem 3rem',
-            cursor: 'pointer',
+            cursor: isAnimatingRef.current ? 'not-allowed' : 'pointer',
+            opacity: isAnimatingRef.current ? 0.5 : 1,
             transition: 'all 0.3s ease',
             fontFamily: 'inherit',
             backdropFilter: 'blur(10px)',
@@ -532,9 +560,11 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
             pointerEvents: 'auto'
           }}
           onMouseEnter={(e) => {
-            e.target.style.borderColor = 'rgba(100, 181, 246, 0.8)';
-            e.target.style.transform = 'scale(1.05)';
-            e.target.style.boxShadow = '0 0 30px rgba(100, 181, 246, 0.5)';
+            if (!isAnimatingRef.current) {
+              e.target.style.borderColor = 'rgba(100, 181, 246, 0.8)';
+              e.target.style.transform = 'scale(1.05)';
+              e.target.style.boxShadow = '0 0 30px rgba(100, 181, 246, 0.5)';
+            }
           }}
           onMouseLeave={(e) => {
             e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';

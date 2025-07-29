@@ -1,6 +1,30 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import Galaxy from './Galaxy';
 import { DEFAULT_GALAXY_SETTINGS, WORMHOLE_TRANSITION_SETTINGS } from './galaxyConfig';
+
+// Debounce helper
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 // Memoized wrapper to prevent unnecessary re-renders
 const GalaxyWrapper = memo(function GalaxyWrapper({ 
@@ -16,16 +40,17 @@ const GalaxyWrapper = memo(function GalaxyWrapper({
     ...props
   }));
 
+  // Debounce config updates to prevent rapid re-renders
+  const debouncedConfig = useDebounce(config, 16); // ~60fps
+
   useEffect(() => {
     if (isWormholeTransition) {
-      // Apply wormhole transition settings
       setSettings(WORMHOLE_TRANSITION_SETTINGS);
 
-      // Reset after transition
       const timer = setTimeout(() => {
         setSettings({
           ...DEFAULT_GALAXY_SETTINGS,
-          ...(config || {}),
+          ...(debouncedConfig || {}),
           ...props
         });
         if (onTransitionComplete) {
@@ -34,14 +59,13 @@ const GalaxyWrapper = memo(function GalaxyWrapper({
       }, transitionDuration);
 
       return () => clearTimeout(timer);
-    } else if (config) {
-      // Update settings when config changes
+    } else if (debouncedConfig) {
       setSettings(prev => ({
         ...prev,
-        ...config
+        ...debouncedConfig
       }));
     }
-  }, [isWormholeTransition, transitionDuration, onTransitionComplete, config, props]);
+  }, [isWormholeTransition, transitionDuration, onTransitionComplete, debouncedConfig, props]);
 
   return (
     <Galaxy 
@@ -50,17 +74,19 @@ const GalaxyWrapper = memo(function GalaxyWrapper({
     />
   );
 }, (prevProps, nextProps) => {
-  // Only re-render if props actually changed
+  // Enhanced comparison to prevent unnecessary re-renders
   if (prevProps.isWormholeTransition !== nextProps.isWormholeTransition) return false;
   if (!prevProps.config || !nextProps.config) return false;
   
-  return (
-    prevProps.config.density === nextProps.config.density &&
-    prevProps.config.speed === nextProps.config.speed &&
-    prevProps.config.glowIntensity === nextProps.config.glowIntensity &&
-    prevProps.config.rotationSpeed === nextProps.config.rotationSpeed &&
-    prevProps.config.autoCenterRepulsion === nextProps.config.autoCenterRepulsion
-  );
+  // Deep comparison of config properties
+  const configKeys = [
+    'density', 'speed', 'glowIntensity', 'rotationSpeed',
+    'autoCenterRepulsion', 'mouseInteraction', 'mouseRepulsion',
+    'twinkleIntensity', 'hueShift', 'saturation', 'repulsionStrength',
+    'starSpeed'
+  ];
+  
+  return configKeys.every(key => prevProps.config[key] === nextProps.config[key]);
 });
 
 export default GalaxyWrapper;
