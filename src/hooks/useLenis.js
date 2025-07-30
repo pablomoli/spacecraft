@@ -1,22 +1,30 @@
 "use client";
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import Lenis from '@studio-freight/lenis';
-
-// Global instance tracker to prevent duplicates
-let globalLenisInstance = null;
 
 export function useLenis(callback, scrollContainerRef) {
   const lenisRef = useRef(null);
   const rafRef = useRef(null);
+  const callbackRef = useRef(callback);
+  
+  // Update callback ref when it changes
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  // Stable callback that uses the ref
+  const stableCallback = useCallback((e) => {
+    callbackRef.current(e);
+  }, []);
 
   useEffect(() => {
     // Wait for the scroll container to be available
     if (!scrollContainerRef?.current) return;
 
-    // Clean up any existing global instance
-    if (globalLenisInstance) {
-      globalLenisInstance.destroy();
-      globalLenisInstance = null;
+    // Clean up any existing instance for this component
+    if (lenisRef.current) {
+      lenisRef.current.destroy();
+      lenisRef.current = null;
     }
 
     try {
@@ -35,13 +43,14 @@ export function useLenis(callback, scrollContainerRef) {
       });
       
       lenisRef.current = lenis;
-      globalLenisInstance = lenis;
 
-      lenis.on('scroll', callback);
+      lenis.on('scroll', stableCallback);
 
       function raf(time) {
-        lenis.raf(time);
-        rafRef.current = requestAnimationFrame(raf);
+        if (lenisRef.current) {
+          lenisRef.current.raf(time);
+          rafRef.current = requestAnimationFrame(raf);
+        }
       }
       rafRef.current = requestAnimationFrame(raf);
 
@@ -50,18 +59,17 @@ export function useLenis(callback, scrollContainerRef) {
           cancelAnimationFrame(rafRef.current);
           rafRef.current = null;
         }
-        lenis.off('scroll', callback);
-        lenis.destroy();
-        lenisRef.current = null;
-        if (globalLenisInstance === lenis) {
-          globalLenisInstance = null;
+        if (lenisRef.current) {
+          lenisRef.current.off('scroll', stableCallback);
+          lenisRef.current.destroy();
+          lenisRef.current = null;
         }
       };
     } catch (error) {
       console.error('Failed to initialize Lenis:', error);
       return undefined;
     }
-  }, [callback, scrollContainerRef]);
+  }, [scrollContainerRef, stableCallback]);
 
   return lenisRef;
 }
