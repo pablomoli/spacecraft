@@ -22,8 +22,7 @@ function GlitchSubtitle() {
   useEffect(() => {
     const tl = gsap.timeline({ repeat: -1 });
 
-    subtitles.forEach((subtitle, index) => {
-      if (index === 0) {
+      subtitles.forEach((_, index) => {      if (index === 0) {
         // First subtitle - fade in
         tl.set([textRef.current, redRef.current, blueRef.current], {
           opacity: 1,
@@ -403,9 +402,7 @@ const sections = [
 ];
 
 const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrollContainerRef }, ref) {
-  const [isScrollLocked, setIsScrollLocked] = useState(false);
   const isAnimatingRef = useRef(false);
-  const keydownHandlerRef = useRef(null);
   const animationTimeoutRef = useRef(null);
 
   const triggerWormholeAnimation = useCallback(() => {
@@ -413,44 +410,26 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
     if (isAnimatingRef.current) return;
     
     isAnimatingRef.current = true;
+    
+    // Stop Lenis scroll during animation
+    lenisRef.current?.stop();
+    
     scrollData.triggerWormhole();
-    setIsScrollLocked(true);
-    lenisRef.current?.stop(); // Stop Lenis scroll
-
-    // Store the event handler reference
-    const handleKeydown = (e) => {
-      e.preventDefault();
-    };
-    keydownHandlerRef.current = handleKeydown;
-    window.addEventListener('keydown', handleKeydown);
-
-    // Store timeout reference for cleanup
+    
+    // The animation completion and scroll reset is now handled in page.js
+    // via the GSAP timeline's onComplete callback
+    
+    // Reset the animation flag after the animation duration
     animationTimeoutRef.current = setTimeout(() => {
-      lenisRef.current?.scrollTo(0, { immediate: true }); // Reset scroll to top
-      
-      // Reset state
-      scrollData.resetToHero();
-      setIsScrollLocked(false);
-      
-      // Clean up event listener
-      if (keydownHandlerRef.current) {
-        window.removeEventListener('keydown', keydownHandlerRef.current);
-        keydownHandlerRef.current = null;
-      }
-      
-      lenisRef.current?.start(); // Resume Lenis scroll
       isAnimatingRef.current = false;
       animationTimeoutRef.current = null;
     }, 2600);
-  }, [lenisRef, scrollData]);
+  }, [scrollData, lenisRef]);
 
   // Add cleanup on unmount
   useEffect(() => {
     return () => {
       // Clean up on unmount
-      if (keydownHandlerRef.current) {
-        window.removeEventListener('keydown', keydownHandlerRef.current);
-      }
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
       }
@@ -561,15 +540,23 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
           }}
           onMouseEnter={(e) => {
             if (!isAnimatingRef.current) {
-              e.target.style.borderColor = 'rgba(100, 181, 246, 0.8)';
-              e.target.style.transform = 'scale(1.05)';
-              e.target.style.boxShadow = '0 0 30px rgba(100, 181, 246, 0.5)';
+              gsap.to(e.target, {
+                borderColor: 'rgba(100, 181, 246, 0.8)',
+                scale: 1.05,
+                boxShadow: '0 0 30px rgba(100, 181, 246, 0.5)',
+                duration: 0.3,
+                ease: 'power2.out'
+              });
             }
           }}
           onMouseLeave={(e) => {
-            e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-            e.target.style.transform = 'scale(1)';
-            e.target.style.boxShadow = 'none';
+            gsap.to(e.target, {
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              scale: 1,
+              boxShadow: 'none',
+              duration: 0.3,
+              ease: 'power2.out'
+            });
           }}
         >
           Venture beyond the known

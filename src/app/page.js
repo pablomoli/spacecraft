@@ -99,7 +99,6 @@ export default function Home() {
   const scrollContainerRef = useRef(null);
   const wormholeTimelineRef = useRef(null);
   const animationProxyRef = useRef(null);
-  const rafIdRef = useRef(null);
   
   const initialGalaxyConfig = useMemo(
     () => ({
@@ -282,14 +281,11 @@ export default function Home() {
         wormholeTimelineRef.current.kill();
         wormholeTimelineRef.current = null;
       }
-      
-      // Cancel any pending RAF
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
 
       setShowUI(false);
+
+      // Capture Lenis ref for cleanup
+      const lenis = lenisRef.current;
 
       // Create animation proxy with initial values
       animationProxyRef.current = { 
@@ -304,12 +300,9 @@ export default function Home() {
         starSpeed: 0.5,
       };
 
-      // Throttled update function
-      let lastUpdateTime = 0;
-      const UPDATE_INTERVAL = 16; // ~60fps
-
-      const updateConfig = (timestamp) => {
-        if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
+      const tl = gsap.timeline({
+        onUpdate: () => {
+          // Update galaxy config directly without RAF (GSAP already uses RAF internally)
           dispatchGalaxyConfig({
             type: 'UPDATE_ALL',
             payload: {
@@ -327,18 +320,8 @@ export default function Home() {
               starSpeed: animationProxyRef.current.starSpeed,
             }
           });
-          // Progress is now updated in timeline onUpdate
-          lastUpdateTime = timestamp;
-        }
-      };
-
-      const tl = gsap.timeline({
-        onUpdate: () => {
-          rafIdRef.current = requestAnimationFrame(updateConfig);
           // Update progress based on timeline progress
-          if (wormholeTimelineRef.current) {
-            setWormholeProgress(wormholeTimelineRef.current.progress());
-          }
+          setWormholeProgress(tl.progress());
         },
         onComplete: () => {
           // Cleanup on natural completion
@@ -348,11 +331,43 @@ export default function Home() {
             type: 'RESET',
             payload: initialGalaxyConfig
           });
-          wormholeTimelineRef.current = null;
-          if (rafIdRef.current) {
-            cancelAnimationFrame(rafIdRef.current);
-            rafIdRef.current = null;
+          
+          // Reset scroll data first
+          scrollData.resetToHero();
+          
+          // Reset scroll position to top and restart Lenis
+          if (lenis) {
+            lenis.scrollTo(0, { immediate: true });
+            // Small delay to ensure DOM updates are complete
+            setTimeout(() => {
+              lenis.start();
+            }, 50);
           }
+          
+          wormholeTimelineRef.current = null;
+        },
+        onInterrupt: () => {
+          // Handle interrupted animation
+          setShowUI(true);
+          setWormholeProgress(0);
+          dispatchGalaxyConfig({
+            type: 'RESET',
+            payload: initialGalaxyConfig
+          });
+          
+          // Reset scroll data first
+          scrollData.resetToHero();
+          
+          // Reset scroll position to top and restart Lenis
+          if (lenis) {
+            lenis.scrollTo(0, { immediate: true });
+            // Small delay to ensure DOM updates are complete
+            setTimeout(() => {
+              lenis.start();
+            }, 50);
+          }
+          
+          wormholeTimelineRef.current = null;
         }
       });
 
@@ -374,17 +389,35 @@ export default function Home() {
       });
 
       return () => {
-        if (wormholeTimelineRef.current) {
+        // Only kill timeline if scrollPhase is changing away from wormhole
+        // This prevents killing the animation on unrelated re-renders
+        if (wormholeTimelineRef.current && scrollData.scrollPhase !== "wormhole") {
           wormholeTimelineRef.current.kill();
+          // Ensure UI is restored if animation was interrupted
+          setShowUI(true);
+          setWormholeProgress(0);
+          dispatchGalaxyConfig({
+            type: 'RESET',
+            payload: initialGalaxyConfig
+          });
+          
+          // Reset scroll data first
+          scrollData.resetToHero();
+          
+          // Reset scroll position to top and restart Lenis
+          if (lenis) {
+            lenis.scrollTo(0, { immediate: true });
+            // Small delay to ensure DOM updates are complete
+            setTimeout(() => {
+              lenis.start();
+            }, 50);
+          }
+          
           wormholeTimelineRef.current = null;
-        }
-        if (rafIdRef.current) {
-          cancelAnimationFrame(rafIdRef.current);
-          rafIdRef.current = null;
         }
       };
     }
-  }, [scrollData.scrollPhase, initialGalaxyConfig]);
+  }, [scrollData.scrollPhase, initialGalaxyConfig, lenisRef, scrollData]);
 
   return (
     <div className="app">
