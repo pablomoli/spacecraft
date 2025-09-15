@@ -99,9 +99,9 @@ vec3 StarLayer(vec2 uv) {
 
   // Local effective params for this layer
   float p = smoothstep(0.0, 1.0, uWarpProgress);
-  // Match motion ramp used in main(): very delayed onset
-  float ps = clamp((p - 0.60) / 0.40, 0.0, 1.0);
-  float speedBlend = pow(ps, 2.8);
+  // Match motion ramp used in main(): even more delayed onset
+  float ps = clamp((p - 0.65) / 0.35, 0.0, 1.0);
+  float speedBlend = pow(ps, 3.0);
   float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
   float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
   float satEff = mix(uSaturation, uWarpSaturation, p);
@@ -157,12 +157,12 @@ void main() {
   float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
   float rotationSpeedEff = mix(uRotationSpeed, uWarpRotationSpeed, p);
   float autoCenterRepulsionEff = mix(uAutoCenterRepulsion, uWarpAutoCenterRepulsion, p);
-  // Motion ramps: very delayed onset so users can taste visuals first
-  // Remap progress for motion: no motion until ~60%, streaks near ~80%+
-  float ps = clamp((p - 0.60) / 0.40, 0.0, 1.0);
-  float pss = clamp((p - 0.80) / 0.20, 0.0, 1.0);
-  float speedBlend = pow(ps, 2.8);
-  float starSpeedBlend = pow(pss, 3.2);
+  // Motion ramps: even more delayed onset
+  // No motion until ~65%, streaks near ~85%+
+  float ps = clamp((p - 0.65) / 0.35, 0.0, 1.0);
+  float pss = clamp((p - 0.85) / 0.15, 0.0, 1.0);
+  float speedBlend = pow(ps, 3.0);
+  float starSpeedBlend = pow(pss, 3.4);
   float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, starSpeedBlend);
   float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
 
