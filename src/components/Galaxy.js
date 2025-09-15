@@ -99,8 +99,9 @@ vec3 StarLayer(vec2 uv) {
 
   // Local effective params for this layer
   float p = smoothstep(0.0, 1.0, uWarpProgress);
-  // Match motion ramp used in main(): slower, delayed ease-in
-  float speedBlend = pow(smoothstep(0.50, 1.0, p), 2.5);
+  // Match motion ramp used in main(): very delayed onset
+  float ps = clamp((p - 0.60) / 0.40, 0.0, 1.0);
+  float speedBlend = pow(ps, 2.8);
   float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
   float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
   float satEff = mix(uSaturation, uWarpSaturation, p);
@@ -156,10 +157,12 @@ void main() {
   float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
   float rotationSpeedEff = mix(uRotationSpeed, uWarpRotationSpeed, p);
   float autoCenterRepulsionEff = mix(uAutoCenterRepulsion, uWarpAutoCenterRepulsion, p);
-  // Motion ramps: slower entry so scenery changes are felt first
-  // Speed starts ramping after ~50% of progress, star streaking after ~70%.
-  float speedBlend = pow(smoothstep(0.50, 1.0, p), 2.5);
-  float starSpeedBlend = pow(smoothstep(0.70, 1.0, p), 3.0);
+  // Motion ramps: very delayed onset so users can taste visuals first
+  // Remap progress for motion: no motion until ~60%, streaks near ~80%+
+  float ps = clamp((p - 0.60) / 0.40, 0.0, 1.0);
+  float pss = clamp((p - 0.80) / 0.20, 0.0, 1.0);
+  float speedBlend = pow(ps, 2.8);
+  float starSpeedBlend = pow(pss, 3.2);
   float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, starSpeedBlend);
   float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
 
