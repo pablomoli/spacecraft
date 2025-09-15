@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 
 export function useScroll() {
   const scrollProgress = useRef(0);
@@ -36,24 +36,25 @@ export function useScroll() {
     sessionStorage.setItem('scrollState', JSON.stringify(state));
   }, [scrollPhase, wormholeTriggered]);
 
-  const handleSectionChange = (sectionIndex) => {
+  const handleSectionChange = useCallback((sectionIndex) => {
     setCurrentSection(sectionIndex);
-  };
+  }, []);
 
-  const triggerWormhole = () => {
+  const triggerWormhole = useCallback(() => {
     setWormholeTriggered(true);
     setScrollPhase('wormhole');
-  };
+  }, []);
 
-  const resetToHero = () => {
+  const resetToHero = useCallback(() => {
     scrollProgress.current = 0;
     extraScrollProgress.current = 0;
     setCurrentSection(0);
     setScrollPhase('normal');
     setWormholeTriggered(false);
-  };
+  }, []);
 
-  return {
+  // Expose a stable object so effects depending on it don't cascade re-run
+  const api = useMemo(() => ({
     scrollProgress,
     extraScrollProgress,
     currentSection,
@@ -64,5 +65,7 @@ export function useScroll() {
     setScrollPhase,
     triggerWormhole,
     resetToHero,
-  };
+  }), [currentSection, sections, scrollPhase, wormholeTriggered, handleSectionChange, triggerWormhole, resetToHero]);
+
+  return api;
 }
