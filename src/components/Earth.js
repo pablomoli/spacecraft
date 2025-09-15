@@ -8,6 +8,9 @@ export default function Earth() {
   const cloudsRef = useRef();
   const geo = new THREE.SphereGeometry(3, 64, 64);
   const [highResLoaded, setHighResLoaded] = useState(false);
+  const [earthMapHigh, setEarthMapHigh] = useState(null);
+  const [lightsMapHigh, setLightsMapHigh] = useState(null);
+  const [cloudsMapHigh, setCloudsMapHigh] = useState(null);
 
   // Load low-res textures immediately
   const [earthMapLow, lightsMapLow, cloudsMapLow] = useLoader(TextureLoader, [
@@ -16,12 +19,7 @@ export default function Earth() {
     "/earth_clouds-lowres.webp",
   ]);
 
-  // Load high-res textures
-  const [earthMap, lightsMap, cloudsMap] = useLoader(TextureLoader, [
-    "/earth.webp",
-    "/earth_lights.webp",
-    "/earth_clouds_ultra.webp",
-  ]);
+  // High-res textures are loaded lazily via TextureLoader after mount
 
   // Optimize texture settings for both low and high res
   const optimizeTextures = (textures) => {
@@ -36,19 +34,58 @@ export default function Earth() {
   };
 
   optimizeTextures([earthMapLow, lightsMapLow, cloudsMapLow]);
-  optimizeTextures([earthMap, lightsMap, cloudsMap]);
 
-  // Switch to high-res after a short delay
+  // Defer high-res loading to idle and based on device/network
   useEffect(() => {
-    const timer = setTimeout(() => setHighResLoaded(true), 100);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+
+    const shouldLoadHighRes = () => {
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      const conn = typeof navigator !== 'undefined' && navigator.connection ? navigator.connection.effectiveType : undefined;
+      const saveData = typeof navigator !== 'undefined' && navigator.connection ? navigator.connection.saveData : false;
+      const mem = (navigator as any)?.deviceMemory || 4; // heuristic
+      const okNet = !conn || conn === '4g';
+      return dpr > 1 && okNet && !saveData && mem >= 4;
+    };
+
+    const loadHighRes = () => {
+      if (cancelled || !shouldLoadHighRes()) return;
+      const loader = new TextureLoader();
+      const loaded: THREE.Texture[] = [];
+      const onLoad = () => {
+        if (cancelled) return;
+        // optimize and set
+        optimizeTextures(loaded);
+        setEarthMapHigh(loaded[0]);
+        setLightsMapHigh(loaded[1]);
+        setCloudsMapHigh(loaded[2]);
+        setHighResLoaded(true);
+      };
+      let pending = 3;
+      const done = () => { if (--pending === 0) onLoad(); };
+      loaded[0] = loader.load('/earth.webp', done);
+      loaded[1] = loader.load('/earth_lights.webp', done);
+      loaded[2] = loader.load('/earth_clouds_ultra.webp', done);
+    };
+
+    const idle = (cb) => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(cb, { timeout: 1500 });
+      } else {
+        setTimeout(cb, 600);
+      }
+    };
+
+    idle(loadHighRes);
+    return () => { cancelled = true; };
   }, []);
 
   // Use high-res if loaded, otherwise low-res
-  const currentEarthMap = highResLoaded && earthMap ? earthMap : earthMapLow;
-  const currentLightsMap = highResLoaded && lightsMap ? lightsMap : lightsMapLow;
-  const currentCloudsMap = highResLoaded && cloudsMap ? cloudsMap : cloudsMapLow;
+  const currentEarthMap = highResLoaded && earthMapHigh ? earthMapHigh : earthMapLow;
+  const currentLightsMap = highResLoaded && lightsMapHigh ? lightsMapHigh : lightsMapLow;
+  const currentCloudsMap = highResLoaded && cloudsMapHigh ? cloudsMapHigh : cloudsMapLow;
   useFrame(() => {
+    if (typeof document !== 'undefined' && document.hidden) return;
     if (groupRef.current) {
       groupRef.current.rotation.y += 0.0002;
     }

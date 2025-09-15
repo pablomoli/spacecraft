@@ -441,6 +441,9 @@ export default function Home() {
           opacity: showUI ? 1 : 0,
           transition: "opacity 0.2s ease",
         }}
+        dpr={[1, 1.5]}
+        shadows={false}
+        gl={{ antialias: false, powerPreference: 'high-performance' }}
       >
         <Suspense fallback={<LoadingFallback />}>
           <Scene

@@ -20,6 +20,8 @@ function GlitchSubtitle() {
   const blueRef = useRef(null);
 
   useEffect(() => {
+    const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
     const tl = gsap.timeline({ repeat: -1 });
 
       subtitles.forEach((_, index) => {      if (index === 0) {
@@ -60,13 +62,20 @@ function GlitchSubtitle() {
       }
     });
 
+    function visHandler() {
+      if (document.hidden) tl.pause(); else tl.resume();
+    }
+    document.addEventListener('visibilitychange', visHandler);
     return () => {
+      document.removeEventListener('visibilitychange', visHandler);
       tl.kill();
     };
   }, [subtitles]);
 
   // Random glitch effect every few seconds
   useEffect(() => {
+    const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
     const randomGlitch = () => {
       if (redRef.current && blueRef.current) {
         gsap.to([redRef.current, blueRef.current], {
@@ -86,8 +95,16 @@ function GlitchSubtitle() {
       }
     };
 
-    const interval = setInterval(randomGlitch, gsap.utils.random(8000, 15000));
-    return () => clearInterval(interval);
+    let interval = setInterval(randomGlitch, gsap.utils.random(8000, 15000));
+    function visHandler() {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        interval = setInterval(randomGlitch, gsap.utils.random(8000, 15000));
+      }
+    }
+    document.addEventListener('visibilitychange', visHandler);
+    return () => { document.removeEventListener('visibilitychange', visHandler); clearInterval(interval); };
   }, []);
 
   return (
@@ -567,4 +584,3 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
 });
 
 export default Overlay;
-
