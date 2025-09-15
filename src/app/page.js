@@ -409,8 +409,19 @@ export default function Home() {
           const timelineProgress = tl.progress();
           setWormholeProgress(Math.round(timelineProgress * 100) / 100);
           const warp = animationProxyRef.current?.progress ?? 0;
+
+          // Compute exit progress during the return segment only
+          const charge = WORMHOLE_ANIMATION_CONFIG.chargeUp.duration;
+          const hold = WORMHOLE_ANIMATION_CONFIG.hold.duration;
+          const ret = WORMHOLE_ANIMATION_CONFIG.return.duration;
+          const tNow = tl.time();
+          let exitP = 0;
+          if (tNow > charge + hold) {
+            exitP = Math.min(1, (tNow - (charge + hold)) / ret);
+          }
+
           if (galaxyRef.current) {
-            galaxyRef.current.updateUniforms({ warpProgress: warp });
+            galaxyRef.current.updateUniforms({ warpProgress: warp, exitProgress: exitP });
           }
         },
         onComplete: () => {
@@ -419,7 +430,7 @@ export default function Home() {
           setWormholeProgress(0);
           // Ensure shader progress is fully reset
           if (galaxyRef.current) {
-            galaxyRef.current.updateUniforms({ warpProgress: 0 });
+            galaxyRef.current.updateUniforms({ warpProgress: 0, exitProgress: 0 });
           }
           // Reset animation proxy
           animationProxyRef.current = { ...initialGalaxyConfig };
@@ -453,7 +464,7 @@ export default function Home() {
           setWormholeProgress(0);
           // Ensure shader progress is fully reset
           if (galaxyRef.current) {
-            galaxyRef.current.updateUniforms({ warpProgress: 0 });
+            galaxyRef.current.updateUniforms({ warpProgress: 0, exitProgress: 0 });
           }
           // Reset animation proxy
           animationProxyRef.current = { ...initialGalaxyConfig };

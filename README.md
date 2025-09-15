@@ -241,3 +241,30 @@ LinkedIn - [pablo-molina-ro](https://linkedin.com/in/pablo-molina-ro)
   <br>
   <sub>Built with ❤️ using Next.js and Three.js</sub>
 </div>
+## Wormhole Animation – Sweet Spot Config (Sept 2025)
+
+This project uses a shader‑driven wormhole background with a single progress uniform that blends between static space and a warp effect. After extensive tuning, the following settings produce the desired “slow taste → streaky warp → clean exit” experience:
+
+- Timeline
+  - Charge up: `2.0s` (`WORMHOLE_ANIMATION_CONFIG.chargeUp.duration`)
+  - Hold: `1.6s` (`WORMHOLE_ANIMATION_CONFIG.hold.duration`)
+  - Return: `0.45s` (`WORMHOLE_ANIMATION_CONFIG.return.duration`)
+
+- Shader motion ramps (entry feel)
+  - Compute `p = smoothstep(0, 1, uWarpProgress)`.
+  - Delay global motion until ~65% of progress:
+    - `ps = clamp((p - 0.65) / 0.35, 0..1)` and `speedBlend = pow(ps, 3.0)`
+  - Delay star streaking until ~85% of progress:
+    - `pss = clamp((p - 0.85) / 0.15, 0..1)` and `starSpeedBlend = pow(pss, 3.4)`
+  - Effective speeds: `speedEff = mix(baseSpeed, warpSpeed, speedBlend)` and `starSpeedEff = mix(baseStarSpeed, warpStarSpeed, starSpeedBlend)`
+
+- Shader visual blends (continuous)
+  - Density, glow, hue shift, saturation, rotation speed, center repulsion, twinkle intensity blend with `p`.
+  - Only motion uses delayed ramps so visuals change before motion.
+
+- Exit settle (phase 3)
+  - A small “shockwave + zoom settle” runs only during return using `uExitProgress` (0→1):
+    - UV settle zoom + subtle radial ripple
+    - Small glow pulse and slight desaturation
+
+Rationale: keep CPU updates minimal (single progress), move the look into the shader, and shape motion vs. visuals independently. This removes prop/imperative races and makes the animation robust and performant.

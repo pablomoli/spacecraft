@@ -49,7 +49,7 @@ export const WORMHOLE_ANIMATION_CONFIG = {
   },
   // Phase 3: Return to normal
   return: {
-    duration: 0.1,
+    duration: 0.45,
     settings: {
       density: DEFAULT_GALAXY_SETTINGS.density,
       speed: DEFAULT_GALAXY_SETTINGS.speed,

@@ -47,7 +47,9 @@ uniform bool uTransparent;
  uniform float uWarpAutoCenterRepulsion;
  uniform float uWarpStarSpeed;
  uniform float uWarpSpeed;
-  uniform float uWarpTwinkleIntensity;
+ uniform float uWarpTwinkleIntensity;
+ // Exit settle progress (phase 3): 0 -> 1 only during return
+ uniform float uExitProgress;
 
 varying vec2 vUv;
 
@@ -168,6 +170,15 @@ void main() {
 
   vec2 focalPx = uFocal * uResolution.xy;
   vec2 uv = (vUv * uResolution.xy - focalPx) / uResolution.y;
+  
+  // Phase 3: exit settle effect (gentle zoom + ripple)
+  float E = smoothstep(0.0, 1.0, uExitProgress);
+  float Eo = 1.0 - pow(1.0 - E, 3.0); // easeOutCubic
+  float zoom = 1.0 - 0.10 * Eo + 0.03 * Eo * Eo;
+  uv *= zoom;
+  float r = length(uv);
+  vec2 nrm = normalize(uv + 1e-6);
+  uv += nrm * (0.015 * Eo * sin(14.0 * r - 5.0 * Eo));
 
   vec2 mouseNorm = uMouse - vec2(0.5);
   
@@ -205,8 +216,15 @@ void main() {
     float alpha = length(col);
     alpha = smoothstep(0.0, 0.3, alpha); // Enhance contrast
     alpha = min(alpha, 1.0); // Clamp to maximum 1.0
+    // Exit settle: subtle glow pulse + slight desaturation
+    col *= (1.0 + 0.18 * Eo);
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(col, vec3(luma), 0.15 * Eo);
     gl_FragColor = vec4(col, alpha);
   } else {
+    col *= (1.0 + 0.18 * Eo);
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(col, vec3(luma), 0.15 * Eo);
     gl_FragColor = vec4(col, 1.0);
   }
 }
@@ -257,6 +275,7 @@ const Galaxy = forwardRef(function Galaxy({
         if (newValues.mouseRepulsion !== undefined) program.uniforms.uMouseRepulsion.value = newValues.mouseRepulsion;
         if (newValues.starSpeed !== undefined) program.uniforms.uStarSpeed.value = newValues.starSpeed * (newValues.speed || speed) * 0.1;
         if (newValues.warpProgress !== undefined) program.uniforms.uWarpProgress.value = newValues.warpProgress;
+        if (newValues.exitProgress !== undefined) program.uniforms.uExitProgress.value = newValues.exitProgress;
       }
     }
   }), [speed]);
@@ -341,6 +360,7 @@ const Galaxy = forwardRef(function Galaxy({
         uWarpStarSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.starSpeed * WORMHOLE_TRANSITION_SETTINGS.speed * 0.1 },
         uWarpSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.speed },
         uWarpTwinkleIntensity: { value: WORMHOLE_TRANSITION_SETTINGS.twinkleIntensity },
+        uExitProgress: { value: 0.0 },
       },
     });
 
