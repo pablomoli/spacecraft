@@ -247,7 +247,7 @@ This project uses a shader‑driven wormhole background with a single progress u
 
 - Timeline
   - Charge up: `2.0s` (`WORMHOLE_ANIMATION_CONFIG.chargeUp.duration`)
-  - Hold: `1.6s` (`WORMHOLE_ANIMATION_CONFIG.hold.duration`)
+  - Hold: `0.8s` (`WORMHOLE_ANIMATION_CONFIG.hold.duration`)
   - Return: `0.45s` (`WORMHOLE_ANIMATION_CONFIG.return.duration`)
 
 - Shader motion ramps (entry feel)

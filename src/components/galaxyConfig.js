@@ -44,7 +44,7 @@ export const WORMHOLE_ANIMATION_CONFIG = {
   },
   // Phase 2: Hold wormhole state
   hold: {
-    duration: 1.6,
+    duration: 0.8,
     progress: 1,
   },
   // Phase 3: Return to normal
