@@ -419,6 +419,10 @@ export default function Home() {
           // Cleanup on natural completion
           setShowUI(true);
           setWormholeProgress(0);
+          // Ensure shader progress is fully reset
+          if (galaxyRef.current) {
+            galaxyRef.current.updateUniforms({ warpProgress: 0 });
+          }
           // Reset animation proxy
           animationProxyRef.current = { ...initialGalaxyConfig };
 
@@ -449,6 +453,10 @@ export default function Home() {
           // Handle interrupted animation
           setShowUI(true);
           setWormholeProgress(0);
+          // Ensure shader progress is fully reset
+          if (galaxyRef.current) {
+            galaxyRef.current.updateUniforms({ warpProgress: 0 });
+          }
           // Reset animation proxy
           animationProxyRef.current = { ...initialGalaxyConfig };
 

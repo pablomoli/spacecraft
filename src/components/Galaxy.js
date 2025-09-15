@@ -47,6 +47,7 @@ uniform bool uTransparent;
  uniform float uWarpAutoCenterRepulsion;
  uniform float uWarpStarSpeed;
  uniform float uWarpSpeed;
+  uniform float uWarpTwinkleIntensity;
 
 varying vec2 vUv;
 
@@ -96,6 +97,13 @@ float Star(vec2 uv, float flare) {
 vec3 StarLayer(vec2 uv) {
   vec3 col = vec3(0.0);
 
+  // Local effective params for this layer
+  float p = smoothstep(0.0, 1.0, uWarpProgress);
+  float speedEff = mix(uSpeed, uWarpSpeed, p);
+  float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
+  float satEff = mix(uSaturation, uWarpSaturation, p);
+  float twinkleIntensityEff = mix(uTwinkleIntensity, uWarpTwinkleIntensity, p);
+
   vec2 gv = fract(uv) - 0.5; 
   vec2 id = floor(uv);
 
@@ -114,18 +122,18 @@ vec3 StarLayer(vec2 uv) {
       vec3 base = vec3(red, grn, blu);
       
       float hue = atan(base.g - base.r, base.b - base.r) / (2.0 * 3.14159) + 0.5;
-      hue = fract(hue + uHueShift / 360.0);
-      float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * uSaturation;
+      hue = fract(hue + hueShiftEff / 360.0);
+      float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * satEff;
       float val = max(max(base.r, base.g), base.b);
       base = hsv2rgb(vec3(hue, sat, val));
 
-      vec2 pad = vec2(tris(seed * 34.0 + uTime * uSpeed / 10.0), tris(seed * 38.0 + uTime * uSpeed / 30.0)) - 0.5;
+      vec2 pad = vec2(tris(seed * 34.0 + uTime * speedEff / 10.0), tris(seed * 38.0 + uTime * speedEff / 30.0)) - 0.5;
 
       float star = Star(gv - offset - pad, flareSize);
       vec3 color = base;
 
-      float twinkle = trisn(uTime * uSpeed + seed * 6.2831) * 0.5 + 1.0;
-      twinkle = mix(1.0, twinkle, uTwinkleIntensity);
+      float twinkle = trisn(uTime * speedEff + seed * 6.2831) * 0.5 + 1.0;
+      twinkle = mix(1.0, twinkle, twinkleIntensityEff);
       star *= twinkle;
       
       col += star * size * color;
@@ -323,6 +331,7 @@ const Galaxy = forwardRef(function Galaxy({
         // Precompute warp starSpeed effective (matches JS combo logic: * speed * 0.1)
         uWarpStarSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.starSpeed * WORMHOLE_TRANSITION_SETTINGS.speed * 0.1 },
         uWarpSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.speed },
+        uWarpTwinkleIntensity: { value: WORMHOLE_TRANSITION_SETTINGS.twinkleIntensity },
       },
     });
 
