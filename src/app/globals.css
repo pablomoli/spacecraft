@@ -176,6 +176,25 @@
   }
 }
 
+/* Prefer reduced motion/effects: lighten heavy visuals */
+@media (prefers-reduced-motion: reduce) {
+  .social-link,
+  .social-link.magnetic {
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+  }
+  .glitch-text-main,
+  .glitch-text-red,
+  .glitch-text-blue {
+    text-shadow: none !important;
+  }
+  .tech-item-icon:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
 /* Extra Small Mobile (iPhone SE, etc.) */
 @media (max-width: 375px) {
   .dot {

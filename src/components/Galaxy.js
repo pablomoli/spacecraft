@@ -194,6 +194,8 @@ export default function Galaxy({
   const smoothMousePos = useRef({ x: 0.5, y: 0.5 });
   const targetMouseActive = useRef(0.0);
   const smoothMouseActive = useRef(0.0);
+  const animateIdRef = useRef(null);
+  const isVisibleRef = useRef(true);
 
   useEffect(() => {
     if (!ctnDom.current) return;
@@ -267,10 +269,10 @@ export default function Galaxy({
     });
 
     const mesh = new Mesh(gl, { geometry, program });
-    let animateId;
-
     function update(t) {
-      animateId = requestAnimationFrame(update);
+      // If page/tab is hidden, skip scheduling/rendering
+      if (!isVisibleRef.current) return;
+      animateIdRef.current = requestAnimationFrame(update);
       if (!disableAnimation) {
         program.uniforms.uTime.value = t * 0.001;
       }
@@ -301,10 +303,34 @@ export default function Galaxy({
       program.uniforms.uMouse.value[1] = smoothMousePos.current.y;
       program.uniforms.uMouseActiveFactor.value = smoothMouseActive.current;
 
-      renderer.render({ scene: mesh });
+      // Skip render if effectively idle to save CPU/GPU
+      const idle =
+        disableAnimation &&
+        speed === 0 &&
+        rotationSpeed === 0 &&
+        twinkleIntensity === 0 &&
+        Math.abs(smoothMouseActive.current) < 0.001;
+
+      if (!idle) {
+        renderer.render({ scene: mesh });
+      }
     }
-    animateId = requestAnimationFrame(update);
+    animateIdRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
+
+    function handleVisibility() {
+      const visible = !document.hidden;
+      isVisibleRef.current = visible;
+      if (!visible) {
+        if (animateIdRef.current) {
+          cancelAnimationFrame(animateIdRef.current);
+          animateIdRef.current = null;
+        }
+      } else if (!animateIdRef.current) {
+        animateIdRef.current = requestAnimationFrame(update);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
 
     function handleMouseMove(e) {
       const rect = ctn.getBoundingClientRect();
@@ -325,8 +351,10 @@ export default function Galaxy({
 
     return () => {
 
-      cancelAnimationFrame(animateId);
+      if (animateIdRef.current) cancelAnimationFrame(animateIdRef.current);
+      animateIdRef.current = null;
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", handleVisibility);
       if (mouseInteraction) {
         ctn.removeEventListener("mousemove", handleMouseMove);
         ctn.removeEventListener("mouseleave", handleMouseLeave);
