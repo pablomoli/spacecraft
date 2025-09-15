@@ -410,9 +410,9 @@ export default function Home() {
           const roundedProgress = Math.round(progress * 100) / 100;
           setWormholeProgress(roundedProgress);
 
-          // Update Galaxy uniforms directly via ref - no React re-renders
-          if (galaxyRef.current && animationProxyRef.current) {
-            galaxyRef.current.updateUniforms(animationProxyRef.current);
+          // Drive only the shader progress; shader blends visuals internally
+          if (galaxyRef.current) {
+            galaxyRef.current.updateUniforms({ warpProgress: progress });
           }
         },
         onComplete: () => {
@@ -479,10 +479,10 @@ export default function Home() {
 
       wormholeTimelineRef.current = tl;
 
-      // Animate to wormhole state
+      // Animate progress only; visuals derive in shader via uWarpProgress
       tl.to(animationProxyRef.current, {
         duration: WORMHOLE_ANIMATION_CONFIG.chargeUp.duration,
-        ...WORMHOLE_ANIMATION_CONFIG.chargeUp.settings,
+        progress: 1,
         ease: WORMHOLE_ANIMATION_CONFIG.chargeUp.ease,
       })
       .to(animationProxyRef.current, {
@@ -491,7 +491,7 @@ export default function Home() {
       })
       .to(animationProxyRef.current, {
         duration: WORMHOLE_ANIMATION_CONFIG.return.duration,
-        ...WORMHOLE_ANIMATION_CONFIG.return.settings,
+        progress: 0,
       });
 
       return () => {

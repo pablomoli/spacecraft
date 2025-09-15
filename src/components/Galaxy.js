@@ -1,5 +1,6 @@
 import { Renderer, Program, Mesh, Color, Triangle } from "ogl";
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { WORMHOLE_TRANSITION_SETTINGS } from "./galaxyConfig";
 import "./Galaxy.css";
 
 const vertexShader = `
@@ -35,6 +36,17 @@ uniform float uRepulsionStrength;
 uniform float uMouseActiveFactor;
 uniform float uAutoCenterRepulsion;
 uniform bool uTransparent;
+
+ // Warp progress and targets
+ uniform float uWarpProgress; // 0.0 -> 1.0
+ uniform float uWarpDensity;
+ uniform float uWarpGlowIntensity;
+ uniform float uWarpSaturation;
+ uniform float uWarpHueShift;
+ uniform float uWarpRotationSpeed;
+ uniform float uWarpAutoCenterRepulsion;
+ uniform float uWarpStarSpeed;
+ uniform float uWarpSpeed;
 
 varying vec2 vUv;
 
@@ -124,15 +136,28 @@ vec3 StarLayer(vec2 uv) {
 }
 
 void main() {
+  // Progress with a soft ease for smoother visuals
+  float p = smoothstep(0.0, 1.0, uWarpProgress);
+  
+  // Derive effective parameters by blending base->warp
+  float densityEff = mix(uDensity, uWarpDensity, p);
+  float glowEff = mix(uGlowIntensity, uWarpGlowIntensity, p);
+  float satEff = mix(uSaturation, uWarpSaturation, p);
+  float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
+  float rotationSpeedEff = mix(uRotationSpeed, uWarpRotationSpeed, p);
+  float autoCenterRepulsionEff = mix(uAutoCenterRepulsion, uWarpAutoCenterRepulsion, p);
+  float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, p);
+  float speedEff = mix(uSpeed, uWarpSpeed, p);
+
   vec2 focalPx = uFocal * uResolution.xy;
   vec2 uv = (vUv * uResolution.xy - focalPx) / uResolution.y;
 
   vec2 mouseNorm = uMouse - vec2(0.5);
   
-  if (uAutoCenterRepulsion > 0.0) {
+  if (autoCenterRepulsionEff > 0.0) {
     vec2 centerUV = vec2(0.0, 0.0); // Center in UV space
     float centerDist = length(uv - centerUV);
-    vec2 repulsion = normalize(uv - centerUV) * (uAutoCenterRepulsion / (centerDist + 0.1));
+    vec2 repulsion = normalize(uv - centerUV) * (autoCenterRepulsionEff / (centerDist + 0.1));
     uv += repulsion * 0.05;
   } else if (uMouseRepulsion) {
     vec2 mousePosUV = (uMouse * uResolution.xy - focalPx) / uResolution.y;
@@ -144,7 +169,7 @@ void main() {
     uv += mouseOffset;
   }
 
-  float autoRotAngle = uTime * uRotationSpeed;
+  float autoRotAngle = uTime * rotationSpeedEff;
   mat2 autoRot = mat2(cos(autoRotAngle), -sin(autoRotAngle), sin(autoRotAngle), cos(autoRotAngle));
   uv = autoRot * uv;
 
@@ -153,8 +178,8 @@ void main() {
   vec3 col = vec3(0.0);
 
   for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
-    float depth = fract(i + uTime * uStarSpeed);
-    float scale = mix(20.0 * uDensity, 0.5 * uDensity, depth);
+    float depth = fract(i + uTime * starSpeedEff);
+    float scale = mix(20.0 * densityEff, 0.5 * densityEff, depth);
     float fade = depth * smoothstep(1.0, 0.9, depth);
     col += StarLayer(uv * scale + i * 453.32) * fade;
   }
@@ -214,6 +239,7 @@ const Galaxy = forwardRef(function Galaxy({
         if (newValues.repulsionStrength !== undefined) program.uniforms.uRepulsionStrength.value = newValues.repulsionStrength;
         if (newValues.mouseRepulsion !== undefined) program.uniforms.uMouseRepulsion.value = newValues.mouseRepulsion;
         if (newValues.starSpeed !== undefined) program.uniforms.uStarSpeed.value = newValues.starSpeed * (newValues.speed || speed) * 0.1;
+        if (newValues.warpProgress !== undefined) program.uniforms.uWarpProgress.value = newValues.warpProgress;
       }
     }
   }), [speed]);
@@ -286,6 +312,17 @@ const Galaxy = forwardRef(function Galaxy({
         uMouseActiveFactor: { value: 0.0 },
         uAutoCenterRepulsion: { value: autoCenterRepulsion },
         uTransparent: { value: transparent },
+        // Warp uniforms
+        uWarpProgress: { value: 0.0 },
+        uWarpDensity: { value: WORMHOLE_TRANSITION_SETTINGS.density },
+        uWarpGlowIntensity: { value: WORMHOLE_TRANSITION_SETTINGS.glowIntensity },
+        uWarpSaturation: { value: WORMHOLE_TRANSITION_SETTINGS.saturation },
+        uWarpHueShift: { value: WORMHOLE_TRANSITION_SETTINGS.hueShift },
+        uWarpRotationSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.rotationSpeed },
+        uWarpAutoCenterRepulsion: { value: WORMHOLE_TRANSITION_SETTINGS.autoCenterRepulsion },
+        // Precompute warp starSpeed effective (matches JS combo logic: * speed * 0.1)
+        uWarpStarSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.starSpeed * WORMHOLE_TRANSITION_SETTINGS.speed * 0.1 },
+        uWarpSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.speed },
       },
     });
 
