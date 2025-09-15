@@ -174,11 +174,11 @@ void main() {
   // Phase 3: exit settle effect (gentle zoom + ripple)
   float E = smoothstep(0.0, 1.0, uExitProgress);
   float Eo = 1.0 - pow(1.0 - E, 3.0); // easeOutCubic
-  float zoom = 1.0 - 0.10 * Eo + 0.03 * Eo * Eo;
+  float zoom = 1.0 - 0.16 * Eo + 0.05 * Eo * Eo;
   uv *= zoom;
   float r = length(uv);
   vec2 nrm = normalize(uv + 1e-6);
-  uv += nrm * (0.015 * Eo * sin(14.0 * r - 5.0 * Eo));
+  uv += nrm * (0.025 * Eo * sin(16.0 * r - 6.0 * Eo));
 
   vec2 mouseNorm = uMouse - vec2(0.5);
   
@@ -217,14 +217,14 @@ void main() {
     alpha = smoothstep(0.0, 0.3, alpha); // Enhance contrast
     alpha = min(alpha, 1.0); // Clamp to maximum 1.0
     // Exit settle: subtle glow pulse + slight desaturation
-    col *= (1.0 + 0.18 * Eo);
+    col *= (1.0 + 0.26 * Eo);
     float luma = dot(col, vec3(0.299, 0.587, 0.114));
-    col = mix(col, vec3(luma), 0.15 * Eo);
+    col = mix(col, vec3(luma), 0.22 * Eo);
     gl_FragColor = vec4(col, alpha);
   } else {
-    col *= (1.0 + 0.18 * Eo);
+    col *= (1.0 + 0.26 * Eo);
     float luma = dot(col, vec3(0.299, 0.587, 0.114));
-    col = mix(col, vec3(luma), 0.15 * Eo);
+    col = mix(col, vec3(luma), 0.22 * Eo);
     gl_FragColor = vec4(col, 1.0);
   }
 }
