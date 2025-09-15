@@ -38,7 +38,7 @@ export const WORMHOLE_TRANSITION_SETTINGS = {
 export const WORMHOLE_ANIMATION_CONFIG = {
   // Phase 1: Charge up to wormhole state
   chargeUp: {
-    duration: 0.5,
+    duration: 1.2,
     ease: "power2.inOut",
     settings: WORMHOLE_TRANSITION_SETTINGS,
   },
@@ -62,4 +62,3 @@ export const WORMHOLE_ANIMATION_CONFIG = {
     },
   },
 };
-
