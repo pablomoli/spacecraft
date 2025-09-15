@@ -99,7 +99,9 @@ vec3 StarLayer(vec2 uv) {
 
   // Local effective params for this layer
   float p = smoothstep(0.0, 1.0, uWarpProgress);
-  float speedEff = mix(uSpeed, uWarpSpeed, p);
+  // Match motion ramp used in main(): slower start for speed
+  float speedBlend = pow(p, 2.0);
+  float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
   float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
   float satEff = mix(uSaturation, uWarpSaturation, p);
   float twinkleIntensityEff = mix(uTwinkleIntensity, uWarpTwinkleIntensity, p);
@@ -154,8 +156,11 @@ void main() {
   float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
   float rotationSpeedEff = mix(uRotationSpeed, uWarpRotationSpeed, p);
   float autoCenterRepulsionEff = mix(uAutoCenterRepulsion, uWarpAutoCenterRepulsion, p);
-  float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, p);
-  float speedEff = mix(uSpeed, uWarpSpeed, p);
+  // Use a slower ramp for motion so users can appreciate visual changes first
+  float speedBlend = pow(p, 2.0);
+  float starSpeedBlend = pow(p, 2.5);
+  float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, starSpeedBlend);
+  float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
 
   vec2 focalPx = uFocal * uResolution.xy;
   vec2 uv = (vUv * uResolution.xy - focalPx) / uResolution.y;
