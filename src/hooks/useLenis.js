@@ -6,7 +6,8 @@ export function useLenis(callback, scrollContainerRef) {
   const lenisRef = useRef(null);
   const rafRef = useRef(null);
   const callbackRef = useRef(callback);
-  
+  const isVisibleRef = useRef(true);
+
   // Update callback ref when it changes
   useEffect(() => {
     callbackRef.current = callback;
@@ -54,6 +55,22 @@ export function useLenis(callback, scrollContainerRef) {
       }
       rafRef.current = requestAnimationFrame(raf);
 
+      function handleVisibility() {
+        const visible = !document.hidden;
+        isVisibleRef.current = visible;
+        if (!visible) {
+          if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+          }
+          lenisRef.current?.stop();
+        } else {
+          lenisRef.current?.start();
+          if (!rafRef.current) rafRef.current = requestAnimationFrame(raf);
+        }
+      }
+      document.addEventListener('visibilitychange', handleVisibility);
+
       return () => {
         if (rafRef.current) {
           cancelAnimationFrame(rafRef.current);
@@ -64,6 +81,7 @@ export function useLenis(callback, scrollContainerRef) {
           lenisRef.current.destroy();
           lenisRef.current = null;
         }
+        document.removeEventListener('visibilitychange', handleVisibility);
       };
     } catch (error) {
       console.error('Failed to initialize Lenis:', error);

@@ -19,6 +19,9 @@ import Scene from "../components/Scene";
 import GalaxyWrapper from "../components/GalaxyWrapper";
 import { DEFAULT_GALAXY_SETTINGS, WORMHOLE_ANIMATION_CONFIG } from "../components/galaxyConfig";
 import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(useGSAP);
 
 // Simple loading component for Suspense fallback
 function LoadingFallback() {
@@ -34,50 +37,145 @@ function LoadingFallback() {
 function WormholeProgress({ progress }) {
   // Calculate which phase we're in based on the animation timeline
   // Total duration: 0.5 + 2 + 0.1 = 2.6s
-  // Phase 1 (charge up): 0 - 0.5s (0% - 19.2%)
-  // Phase 2 (hold): 0.5 - 2.5s (19.2% - 96.2%)
-  // Phase 3 (return): 2.5 - 2.6s (96.2% - 100%)
-  
-  const getPhaseProgress = () => {
-    if (progress < 0.192) return 0; // Charging
-    if (progress < 0.5) return 1; // Mid-wormhole
-    if (progress < 0.962) return 2; // Full wormhole
-    return 3; // Returning
+  const totalDuration = 2.6;
+  const currentTime = progress * totalDuration;
+
+  // Calculate countdown timer
+  const timeRemaining = Math.max(0, totalDuration - currentTime);
+  const seconds = Math.floor(timeRemaining);
+  const milliseconds = Math.floor((timeRemaining % 1) * 100);
+
+  // Determine phase for visual feedback
+  const getPhase = () => {
+    if (progress < 0.192) return 'charging';
+    if (progress < 0.962) return 'warping';
+    return 'returning';
   };
-  
-  const phase = getPhaseProgress();
-  
+
+  const phase = getPhase();
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        zIndex: 10000,
-        display: "flex",
-        gap: "1rem",
-        pointerEvents: "none",
-      }}
-    >
-      {[0, 1, 2].map((index) => (
+    <>
+      {/* Top-right corner timer */}
+      <div
+        style={{
+          position: "fixed",
+          top: "2rem",
+          right: "2rem",
+          zIndex: 999999,
+          pointerEvents: "none",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "0.5rem",
+        }}
+      >
+        {/* Timer display */}
         <div
-          key={index}
           style={{
-            width: "12px",
-            height: "12px",
-            borderRadius: "50%",
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
-            opacity: phase > index ? 1 : 0.3,
-            transition: "opacity 0.3s ease",
-            boxShadow:
-              phase > index
-                ? "0 0 10px rgba(255, 255, 255, 0.8)"
-                : "none",
+            fontSize: "2.5rem",
+            fontFamily: "monospace",
+            fontWeight: "bold",
+            color: phase === 'charging' ? "#00aaff" :
+                   phase === 'warping' ? "#ff00ff" : "#00ff00",
+            textShadow: "0 0 30px currentColor, 0 0 10px currentColor",
+            transition: "color 0.3s ease",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            padding: "0.5rem 1rem",
+            borderRadius: "8px",
+          }}
+        >
+          {seconds}.{milliseconds.toString().padStart(2, '0')}
+        </div>
+
+        {/* Phase indicator text */}
+        <div
+          style={{
+            fontSize: "0.75rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            color: "rgba(255, 255, 255, 0.6)",
+            fontWeight: 300,
+          }}
+        >
+          {phase === 'charging' ? 'Charging Wormhole' :
+           phase === 'warping' ? 'Warping Through Space' :
+           'Returning Home'}
+        </div>
+      </div>
+
+      {/* Bottom progress bar */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "6px",
+          backgroundColor: "rgba(255, 255, 255, 0.2)",
+          zIndex: 999999,
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${progress * 100}%`,
+            backgroundColor: phase === 'charging' ? "#00aaff" :
+                           phase === 'warping' ? "#ff00ff" : "#00ff00",
+            boxShadow: "0 0 10px currentColor",
+            transition: "width 0.1s linear, background-color 0.3s ease",
           }}
         />
-      ))}
-    </div>
+      </div>
+
+      {/* Optional: Circular progress indicator (bottom-right) */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: "2rem",
+          right: "2rem",
+          width: "60px",
+          height: "60px",
+          zIndex: 999999,
+          pointerEvents: "none",
+        }}
+      >
+        <svg
+          width="60"
+          height="60"
+          style={{
+            transform: "rotate(-90deg)",
+          }}
+        >
+          {/* Background circle */}
+          <circle
+            cx="30"
+            cy="30"
+            r="28"
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.1)"
+            strokeWidth="2"
+          />
+          {/* Progress circle */}
+          <circle
+            cx="30"
+            cy="30"
+            r="28"
+            fill="none"
+            stroke={phase === 'charging' ? "#00aaff" :
+                   phase === 'warping' ? "#ff00ff" : "#00ff00"}
+            strokeWidth="2"
+            strokeDasharray={`${2 * Math.PI * 28}`}
+            strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress)}`}
+            style={{
+              transition: "stroke-dashoffset 0.1s linear, stroke 0.3s ease",
+              filter: "drop-shadow(0 0 5px currentColor)",
+            }}
+          />
+        </svg>
+      </div>
+    </>
   );
 }
 
@@ -99,6 +197,7 @@ export default function Home() {
   const scrollContainerRef = useRef(null);
   const wormholeTimelineRef = useRef(null);
   const animationProxyRef = useRef(null);
+  const galaxyRef = useRef(null);
   
   const initialGalaxyConfig = useMemo(
     () => ({
@@ -274,8 +373,11 @@ export default function Home() {
   // This was causing lag by updating state 60 times per second
 
   // Handle wormhole animation
-  useEffect(() => {
-    if (scrollData.scrollPhase === "wormhole") {
+  const scrollPhase = scrollData.scrollPhase;
+  const resetToHero = scrollData.resetToHero;
+
+  useGSAP(() => {
+    if (scrollPhase === "wormhole") {
       // Kill any existing timeline
       if (wormholeTimelineRef.current) {
         wormholeTimelineRef.current.kill();
@@ -284,8 +386,9 @@ export default function Home() {
 
       setShowUI(false);
 
-      // Capture Lenis ref for cleanup
+      // Capture refs for cleanup
       const lenis = lenisRef.current;
+      const scrollContainer = scrollContainerRef.current;
 
       // Create animation proxy with initial values
       animationProxyRef.current = { 
@@ -302,71 +405,74 @@ export default function Home() {
 
       const tl = gsap.timeline({
         onUpdate: () => {
-          // Update galaxy config directly without RAF (GSAP already uses RAF internally)
-          dispatchGalaxyConfig({
-            type: 'UPDATE_ALL',
-            payload: {
-              density: animationProxyRef.current.density,
-              speed: animationProxyRef.current.speed,
-              glowIntensity: animationProxyRef.current.glowIntensity,
-              rotationSpeed: animationProxyRef.current.rotationSpeed,
-              autoCenterRepulsion: animationProxyRef.current.autoCenterRepulsion,
-              mouseInteraction: animationProxyRef.current.mouseInteraction,
-              mouseRepulsion: animationProxyRef.current.mouseRepulsion,
-              twinkleIntensity: animationProxyRef.current.twinkleIntensity,
-              hueShift: animationProxyRef.current.hueShift,
-              saturation: animationProxyRef.current.saturation,
-              repulsionStrength: animationProxyRef.current.repulsionStrength,
-              starSpeed: animationProxyRef.current.starSpeed,
-            }
-          });
-          // Update progress based on timeline progress
-          setWormholeProgress(tl.progress());
+          // Update progress for timer display
+          const progress = tl.progress();
+          const roundedProgress = Math.round(progress * 100) / 100;
+          setWormholeProgress(roundedProgress);
+
+          // Update Galaxy uniforms directly via ref - no React re-renders
+          if (galaxyRef.current && animationProxyRef.current) {
+            galaxyRef.current.updateUniforms(animationProxyRef.current);
+          }
         },
         onComplete: () => {
           // Cleanup on natural completion
           setShowUI(true);
           setWormholeProgress(0);
-          dispatchGalaxyConfig({
-            type: 'RESET',
-            payload: initialGalaxyConfig
-          });
-          
-          // Reset scroll data first
-          scrollData.resetToHero();
-          
-          // Reset scroll position to top and restart Lenis
+          // Reset animation proxy
+          animationProxyRef.current = { ...initialGalaxyConfig };
+
+          // Reset scroll data + force scroll to very top
+          resetToHero();
+
+          // Force immediate scroll reset before starting Lenis
+          if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+            scrollContainer.scrollLeft = 0;
+          }
+          window.scrollTo(0, 0);
+
+          // Now restart Lenis at the top
           if (lenis) {
-            lenis.scrollTo(0, { immediate: true });
-            // Small delay to ensure DOM updates are complete
+            lenis.stop();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            // Small delay to ensure DOM is ready
             setTimeout(() => {
               lenis.start();
+              lenis.scrollTo(0, { immediate: true, force: true });
             }, 50);
           }
-          
+
           wormholeTimelineRef.current = null;
         },
         onInterrupt: () => {
           // Handle interrupted animation
           setShowUI(true);
           setWormholeProgress(0);
-          dispatchGalaxyConfig({
-            type: 'RESET',
-            payload: initialGalaxyConfig
-          });
-          
-          // Reset scroll data first
-          scrollData.resetToHero();
-          
-          // Reset scroll position to top and restart Lenis
+          // Reset animation proxy
+          animationProxyRef.current = { ...initialGalaxyConfig };
+
+          // Reset scroll data + force scroll to very top
+          resetToHero();
+
+          // Force immediate scroll reset before starting Lenis
+          if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+            scrollContainer.scrollLeft = 0;
+          }
+          window.scrollTo(0, 0);
+
+          // Now restart Lenis at the top
           if (lenis) {
-            lenis.scrollTo(0, { immediate: true });
-            // Small delay to ensure DOM updates are complete
+            lenis.stop();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            // Small delay to ensure DOM is ready
             setTimeout(() => {
               lenis.start();
+              lenis.scrollTo(0, { immediate: true, force: true });
             }, 50);
           }
-          
+
           wormholeTimelineRef.current = null;
         }
       });
@@ -391,25 +497,32 @@ export default function Home() {
       return () => {
         // Only kill timeline if scrollPhase is changing away from wormhole
         // This prevents killing the animation on unrelated re-renders
-        if (wormholeTimelineRef.current && scrollData.scrollPhase !== "wormhole") {
+        if (wormholeTimelineRef.current && scrollPhase !== "wormhole") {
           wormholeTimelineRef.current.kill();
           // Ensure UI is restored if animation was interrupted
           setShowUI(true);
           setWormholeProgress(0);
-          dispatchGalaxyConfig({
-            type: 'RESET',
-            payload: initialGalaxyConfig
-          });
+          // Reset animation proxy
+          animationProxyRef.current = { ...initialGalaxyConfig };
           
-          // Reset scroll data first
-          scrollData.resetToHero();
-          
-          // Reset scroll position to top and restart Lenis
+          // Reset scroll data + force scroll to very top
+          resetToHero();
+
+          // Force immediate scroll reset before starting Lenis
+          if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+            scrollContainer.scrollLeft = 0;
+          }
+          window.scrollTo(0, 0);
+
+          // Now restart Lenis at the top
           if (lenis) {
-            lenis.scrollTo(0, { immediate: true });
-            // Small delay to ensure DOM updates are complete
+            lenis.stop();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            // Small delay to ensure DOM is ready
             setTimeout(() => {
               lenis.start();
+              lenis.scrollTo(0, { immediate: true, force: true });
             }, 50);
           }
           
@@ -417,7 +530,7 @@ export default function Home() {
         }
       };
     }
-  }, [scrollData.scrollPhase, initialGalaxyConfig, lenisRef, scrollData]);
+  }, { dependencies: [scrollPhase] });
 
   return (
     <div className="app">
@@ -432,7 +545,10 @@ export default function Home() {
           pointerEvents: "none",
         }}
       >
-        <GalaxyWrapper config={galaxyConfig} />
+        <GalaxyWrapper
+          ref={galaxyRef}
+          config={scrollPhase === "wormhole" ? initialGalaxyConfig : galaxyConfig}
+        />
       </div>
 
       <Canvas
@@ -473,9 +589,10 @@ export default function Home() {
         }}
       />
 
-      {scrollData.scrollPhase === "wormhole" && (
+      {(scrollData.scrollPhase === "wormhole" || wormholeProgress > 0) && (
         <WormholeProgress progress={wormholeProgress} />
       )}
+
     </div>
   );
 }

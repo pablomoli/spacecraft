@@ -1,5 +1,5 @@
 import { Renderer, Program, Mesh, Color, Triangle } from "ogl";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import "./Galaxy.css";
 
 const vertexShader = `
@@ -170,7 +170,7 @@ void main() {
 }
 `;
 
-export default function Galaxy({
+const Galaxy = forwardRef(function Galaxy({
   focal = [0.5, 0.5],
   rotation = [1.0, 0.0],
   starSpeed = 0.5,
@@ -188,12 +188,35 @@ export default function Galaxy({
   autoCenterRepulsion = 0,
   transparent = true,
   ...rest
-}) {
+}, ref) {
   const ctnDom = useRef(null);
   const targetMousePos = useRef({ x: 0.5, y: 0.5 });
   const smoothMousePos = useRef({ x: 0.5, y: 0.5 });
   const targetMouseActive = useRef(0.0);
   const smoothMouseActive = useRef(0.0);
+  const animateIdRef = useRef(null);
+  const isVisibleRef = useRef(true);
+  const programRef = useRef(null);
+
+  // Expose uniform update method via ref
+  useImperativeHandle(ref, () => ({
+    updateUniforms: (newValues) => {
+      if (programRef.current) {
+        const program = programRef.current;
+        if (newValues.density !== undefined) program.uniforms.uDensity.value = newValues.density;
+        if (newValues.speed !== undefined) program.uniforms.uSpeed.value = newValues.speed;
+        if (newValues.glowIntensity !== undefined) program.uniforms.uGlowIntensity.value = newValues.glowIntensity;
+        if (newValues.rotationSpeed !== undefined) program.uniforms.uRotationSpeed.value = newValues.rotationSpeed;
+        if (newValues.autoCenterRepulsion !== undefined) program.uniforms.uAutoCenterRepulsion.value = newValues.autoCenterRepulsion;
+        if (newValues.saturation !== undefined) program.uniforms.uSaturation.value = newValues.saturation;
+        if (newValues.hueShift !== undefined) program.uniforms.uHueShift.value = newValues.hueShift;
+        if (newValues.twinkleIntensity !== undefined) program.uniforms.uTwinkleIntensity.value = newValues.twinkleIntensity;
+        if (newValues.repulsionStrength !== undefined) program.uniforms.uRepulsionStrength.value = newValues.repulsionStrength;
+        if (newValues.mouseRepulsion !== undefined) program.uniforms.uMouseRepulsion.value = newValues.mouseRepulsion;
+        if (newValues.starSpeed !== undefined) program.uniforms.uStarSpeed.value = newValues.starSpeed * (newValues.speed || speed) * 0.1;
+      }
+    }
+  }), [speed]);
 
   useEffect(() => {
     if (!ctnDom.current) return;
@@ -266,27 +289,18 @@ export default function Galaxy({
       },
     });
 
+    // Store program reference for imperative updates
+    programRef.current = program;
+
     const mesh = new Mesh(gl, { geometry, program });
-    let animateId;
 
     function update(t) {
-      animateId = requestAnimationFrame(update);
+      // If page/tab is hidden, skip scheduling/rendering
+      if (!isVisibleRef.current) return;
+      animateIdRef.current = requestAnimationFrame(update);
       if (!disableAnimation) {
         program.uniforms.uTime.value = t * 0.001;
       }
-      
-      // Update uniforms with current prop values
-      program.uniforms.uDensity.value = density;
-      program.uniforms.uSpeed.value = speed;
-      program.uniforms.uGlowIntensity.value = glowIntensity;
-      program.uniforms.uRotationSpeed.value = rotationSpeed;
-      program.uniforms.uAutoCenterRepulsion.value = autoCenterRepulsion;
-      program.uniforms.uSaturation.value = saturation;
-      program.uniforms.uHueShift.value = hueShift;
-      program.uniforms.uTwinkleIntensity.value = twinkleIntensity;
-      program.uniforms.uRepulsionStrength.value = repulsionStrength;
-      program.uniforms.uMouseRepulsion.value = mouseRepulsion;
-      program.uniforms.uStarSpeed.value = starSpeed * speed * 0.1;
 
       const lerpFactor = 0.05;
       smoothMousePos.current.x +=
@@ -301,10 +315,34 @@ export default function Galaxy({
       program.uniforms.uMouse.value[1] = smoothMousePos.current.y;
       program.uniforms.uMouseActiveFactor.value = smoothMouseActive.current;
 
-      renderer.render({ scene: mesh });
+      // Skip render if effectively idle to save CPU/GPU
+      const idle =
+        disableAnimation &&
+        speed === 0 &&
+        rotationSpeed === 0 &&
+        twinkleIntensity === 0 &&
+        Math.abs(smoothMouseActive.current) < 0.001;
+
+      if (!idle) {
+        renderer.render({ scene: mesh });
+      }
     }
-    animateId = requestAnimationFrame(update);
+    animateIdRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
+
+    function handleVisibility() {
+      const visible = !document.hidden;
+      isVisibleRef.current = visible;
+      if (!visible) {
+        if (animateIdRef.current) {
+          cancelAnimationFrame(animateIdRef.current);
+          animateIdRef.current = null;
+        }
+      } else if (!animateIdRef.current) {
+        animateIdRef.current = requestAnimationFrame(update);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
 
     function handleMouseMove(e) {
       const rect = ctn.getBoundingClientRect();
@@ -325,8 +363,10 @@ export default function Galaxy({
 
     return () => {
 
-      cancelAnimationFrame(animateId);
+      if (animateIdRef.current) cancelAnimationFrame(animateIdRef.current);
+      animateIdRef.current = null;
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", handleVisibility);
       if (mouseInteraction) {
         ctn.removeEventListener("mousemove", handleMouseMove);
         ctn.removeEventListener("mouseleave", handleMouseLeave);
@@ -355,5 +395,38 @@ export default function Galaxy({
     transparent,
   ]);
 
+  // Apply prop-driven uniform updates only when props change,
+  // not every animation frame. This prevents overwriting GSAP updates.
+  useEffect(() => {
+    const program = programRef.current;
+    if (!program) return;
+    program.uniforms.uDensity.value = density;
+    program.uniforms.uSpeed.value = speed;
+    program.uniforms.uGlowIntensity.value = glowIntensity;
+    program.uniforms.uRotationSpeed.value = rotationSpeed;
+    program.uniforms.uAutoCenterRepulsion.value = autoCenterRepulsion;
+    program.uniforms.uSaturation.value = saturation;
+    program.uniforms.uHueShift.value = hueShift;
+    program.uniforms.uTwinkleIntensity.value = twinkleIntensity;
+    program.uniforms.uRepulsionStrength.value = repulsionStrength;
+    program.uniforms.uMouseRepulsion.value = mouseRepulsion;
+    // Compound value derived from starSpeed & speed
+    program.uniforms.uStarSpeed.value = starSpeed * speed * 0.1;
+  }, [
+    density,
+    speed,
+    glowIntensity,
+    rotationSpeed,
+    autoCenterRepulsion,
+    saturation,
+    hueShift,
+    twinkleIntensity,
+    repulsionStrength,
+    mouseRepulsion,
+    starSpeed,
+  ]);
+
   return <div ref={ctnDom} className="galaxy-container" {...rest} />;
-}
+});
+
+export default Galaxy;
