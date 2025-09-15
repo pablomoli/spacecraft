@@ -165,6 +165,14 @@ void main() {
   float pss = clamp((p - 0.85) / 0.15, 0.0, 1.0);
   float speedBlend = pow(ps, 3.0);
   float starSpeedBlend = pow(pss, 3.4);
+  
+  // Exit snap: damp motion sharply near the very end of the return
+  // This keeps motion perceptible until late, then snaps to static.
+  float E_snap = smoothstep(0.0, 1.0, uExitProgress);
+  float exitSnap = pow(E_snap, 6.0);
+  float exitSnapStars = pow(E_snap, 8.0);
+  speedBlend *= (1.0 - exitSnap);
+  starSpeedBlend *= (1.0 - exitSnapStars);
   float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, starSpeedBlend);
   float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
 
