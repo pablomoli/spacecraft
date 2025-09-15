@@ -47,7 +47,6 @@ uniform bool uTransparent;
  uniform float uWarpAutoCenterRepulsion;
  uniform float uWarpStarSpeed;
  uniform float uWarpSpeed;
- uniform float uWarpOutProgress; // 0 during enter/hold, 0->1 on exit
   uniform float uWarpTwinkleIntensity;
 
 varying vec2 vUv;
@@ -132,18 +131,7 @@ vec3 StarLayer(vec2 uv) {
 
       vec2 pad = vec2(tris(seed * 34.0 + uTime * speedEff / 10.0), tris(seed * 38.0 + uTime * speedEff / 30.0)) - 0.5;
 
-      // Anisotropic radial stretch to create streaks during warp
-      vec2 uvRel = gv - offset - pad;
-      float starSpeedBlendLocal = pow(smoothstep(0.55, 1.0, p), 2.5);
-      float streakAmount = starSpeedBlendLocal * 4.0; // tweak factor for visible streaks
-      vec2 dir = normalize(uvRel + 1e-6);
-      mat2 R = mat2(dir.x, -dir.y, dir.y, dir.x);
-      mat2 RT = mat2(dir.x, dir.y, -dir.y, dir.x);
-      vec2 aligned = R * uvRel;
-      aligned.x /= (1.0 + streakAmount);
-      vec2 uvStreaked = RT * aligned;
-
-      float star = Star(uvStreaked, flareSize);
+      float star = Star(gv - offset - pad, flareSize);
       vec3 color = base;
 
       float twinkle = trisn(uTime * speedEff + seed * 6.2831) * 0.5 + 1.0;
@@ -172,8 +160,6 @@ void main() {
   // Speed starts ramping after ~35% of progress, star streaking after ~55%.
   float speedBlend = pow(smoothstep(0.35, 1.0, p), 2.0);
   float starSpeedBlend = pow(smoothstep(0.55, 1.0, p), 2.5);
-  // Give exit phase a small tail so streaks linger briefly as we come out
-  starSpeedBlend = min(1.0, starSpeedBlend + 0.3 * (1.0 - p) * clamp(uWarpOutProgress, 0.0, 1.0));
   float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, starSpeedBlend);
   float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
 
@@ -268,7 +254,6 @@ const Galaxy = forwardRef(function Galaxy({
         if (newValues.mouseRepulsion !== undefined) program.uniforms.uMouseRepulsion.value = newValues.mouseRepulsion;
         if (newValues.starSpeed !== undefined) program.uniforms.uStarSpeed.value = newValues.starSpeed * (newValues.speed || speed) * 0.1;
         if (newValues.warpProgress !== undefined) program.uniforms.uWarpProgress.value = newValues.warpProgress;
-        if (newValues.warpOutProgress !== undefined) program.uniforms.uWarpOutProgress.value = newValues.warpOutProgress;
       }
     }
   }), [speed]);
@@ -352,7 +337,6 @@ const Galaxy = forwardRef(function Galaxy({
         // Precompute warp starSpeed effective (matches JS combo logic: * speed * 0.1)
         uWarpStarSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.starSpeed * WORMHOLE_TRANSITION_SETTINGS.speed * 0.1 },
         uWarpSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.speed },
-        uWarpOutProgress: { value: 0.0 },
         uWarpTwinkleIntensity: { value: WORMHOLE_TRANSITION_SETTINGS.twinkleIntensity },
       },
     });

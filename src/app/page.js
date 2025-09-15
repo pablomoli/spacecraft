@@ -405,25 +405,12 @@ export default function Home() {
 
       const tl = gsap.timeline({
         onUpdate: () => {
-          // Timeline progress for UI only
+          // Timeline progress drives UI; shader uses logical warp progress (0->1->0)
           const timelineProgress = tl.progress();
           setWormholeProgress(Math.round(timelineProgress * 100) / 100);
-
-          // Drive shader with the proxy's logical progress (0->1->0)
           const warp = animationProxyRef.current?.progress ?? 0;
-
-          // Compute exit phase progress for unique phase-out shaping
-          const charge = WORMHOLE_ANIMATION_CONFIG.chargeUp.duration;
-          const hold = WORMHOLE_ANIMATION_CONFIG.hold.duration;
-          const ret = WORMHOLE_ANIMATION_CONFIG.return.duration;
-          const tNow = tl.time();
-          let out = 0;
-          if (tNow > charge + hold) {
-            out = Math.min(1, (tNow - (charge + hold)) / ret);
-          }
-
           if (galaxyRef.current) {
-            galaxyRef.current.updateUniforms({ warpProgress: warp, warpOutProgress: out });
+            galaxyRef.current.updateUniforms({ warpProgress: warp });
           }
         },
         onComplete: () => {
@@ -432,7 +419,7 @@ export default function Home() {
           setWormholeProgress(0);
           // Ensure shader progress is fully reset
           if (galaxyRef.current) {
-            galaxyRef.current.updateUniforms({ warpProgress: 0, warpOutProgress: 0 });
+            galaxyRef.current.updateUniforms({ warpProgress: 0 });
           }
           // Reset animation proxy
           animationProxyRef.current = { ...initialGalaxyConfig };
@@ -466,7 +453,7 @@ export default function Home() {
           setWormholeProgress(0);
           // Ensure shader progress is fully reset
           if (galaxyRef.current) {
-            galaxyRef.current.updateUniforms({ warpProgress: 0, warpOutProgress: 0 });
+            galaxyRef.current.updateUniforms({ warpProgress: 0 });
           }
           // Reset animation proxy
           animationProxyRef.current = { ...initialGalaxyConfig };
