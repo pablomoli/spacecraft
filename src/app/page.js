@@ -95,6 +95,7 @@ const galaxyConfigReducer = (state, action) => {
 
 export default function Home() {
   const scrollData = useScroll();
+  const { scrollPhase, resetToHero } = scrollData;
   const overlayRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const wormholeTimelineRef = useRef(null);
@@ -275,7 +276,7 @@ export default function Home() {
 
   // Handle wormhole animation
   useEffect(() => {
-    if (scrollData.scrollPhase === "wormhole") {
+    if (scrollPhase === "wormhole") {
       // Kill any existing timeline
       if (wormholeTimelineRef.current) {
         wormholeTimelineRef.current.kill();
@@ -332,15 +333,24 @@ export default function Home() {
             payload: initialGalaxyConfig
           });
           
-          // Reset scroll data first
-          scrollData.resetToHero();
-          
-          // Reset scroll position to top and restart Lenis
+          // Reset scroll data + force scroll to very top
+          resetToHero();
+
+          // Force immediate scroll reset before starting Lenis
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 0;
+            scrollContainerRef.current.scrollLeft = 0;
+          }
+          window.scrollTo(0, 0);
+
+          // Now restart Lenis at the top
           if (lenis) {
-            lenis.scrollTo(0, { immediate: true });
-            // Small delay to ensure DOM updates are complete
+            lenis.stop();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            // Small delay to ensure DOM is ready
             setTimeout(() => {
               lenis.start();
+              lenis.scrollTo(0, { immediate: true, force: true });
             }, 50);
           }
           
@@ -355,15 +365,24 @@ export default function Home() {
             payload: initialGalaxyConfig
           });
           
-          // Reset scroll data first
-          scrollData.resetToHero();
-          
-          // Reset scroll position to top and restart Lenis
+          // Reset scroll data + force scroll to very top
+          resetToHero();
+
+          // Force immediate scroll reset before starting Lenis
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 0;
+            scrollContainerRef.current.scrollLeft = 0;
+          }
+          window.scrollTo(0, 0);
+
+          // Now restart Lenis at the top
           if (lenis) {
-            lenis.scrollTo(0, { immediate: true });
-            // Small delay to ensure DOM updates are complete
+            lenis.stop();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            // Small delay to ensure DOM is ready
             setTimeout(() => {
               lenis.start();
+              lenis.scrollTo(0, { immediate: true, force: true });
             }, 50);
           }
           
@@ -388,10 +407,11 @@ export default function Home() {
         ...WORMHOLE_ANIMATION_CONFIG.return.settings,
       });
 
+      const cleanupEl = scrollContainerRef.current;
       return () => {
         // Only kill timeline if scrollPhase is changing away from wormhole
         // This prevents killing the animation on unrelated re-renders
-        if (wormholeTimelineRef.current && scrollData.scrollPhase !== "wormhole") {
+        if (wormholeTimelineRef.current && scrollPhase !== "wormhole") {
           wormholeTimelineRef.current.kill();
           // Ensure UI is restored if animation was interrupted
           setShowUI(true);
@@ -401,15 +421,24 @@ export default function Home() {
             payload: initialGalaxyConfig
           });
           
-          // Reset scroll data first
-          scrollData.resetToHero();
-          
-          // Reset scroll position to top and restart Lenis
+          // Reset scroll data + force scroll to very top
+          resetToHero();
+
+          // Force immediate scroll reset before starting Lenis
+          if (cleanupEl) {
+            cleanupEl.scrollTop = 0;
+            cleanupEl.scrollLeft = 0;
+          }
+          window.scrollTo(0, 0);
+
+          // Now restart Lenis at the top
           if (lenis) {
-            lenis.scrollTo(0, { immediate: true });
-            // Small delay to ensure DOM updates are complete
+            lenis.stop();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            // Small delay to ensure DOM is ready
             setTimeout(() => {
               lenis.start();
+              lenis.scrollTo(0, { immediate: true, force: true });
             }, 50);
           }
           
@@ -417,7 +446,7 @@ export default function Home() {
         }
       };
     }
-  }, [scrollData.scrollPhase, initialGalaxyConfig, lenisRef, scrollData]);
+  }, [scrollPhase, initialGalaxyConfig, lenisRef, resetToHero]);
 
   return (
     <div className="app">
@@ -428,7 +457,7 @@ export default function Home() {
           left: 0,
           width: "100%",
           height: "100%",
-          zIndex: scrollData.scrollPhase === "wormhole" ? 9999 : 0,
+          zIndex: scrollPhase === "wormhole" ? 9999 : 0,
           pointerEvents: "none",
         }}
       >
@@ -449,7 +478,7 @@ export default function Home() {
           <Scene
             scrollProgress={scrollData.scrollProgress}
             extraScrollProgress={scrollData.extraScrollProgress}
-            scrollPhase={scrollData.scrollPhase}
+            scrollPhase={scrollPhase}
           />
         </Suspense>
       </Canvas>
@@ -476,7 +505,7 @@ export default function Home() {
         }}
       />
 
-      {scrollData.scrollPhase === "wormhole" && (
+      {scrollPhase === "wormhole" && (
         <WormholeProgress progress={wormholeProgress} />
       )}
     </div>

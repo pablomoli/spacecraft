@@ -43,7 +43,7 @@ export default function Earth() {
       const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
       const conn = typeof navigator !== 'undefined' && navigator.connection ? navigator.connection.effectiveType : undefined;
       const saveData = typeof navigator !== 'undefined' && navigator.connection ? navigator.connection.saveData : false;
-      const mem = (navigator as any)?.deviceMemory || 4; // heuristic
+      const mem = (typeof navigator !== 'undefined' && 'deviceMemory' in navigator ? (navigator).deviceMemory : 4);
       const okNet = !conn || conn === '4g';
       return dpr > 1 && okNet && !saveData && mem >= 4;
     };
@@ -51,7 +51,7 @@ export default function Earth() {
     const loadHighRes = () => {
       if (cancelled || !shouldLoadHighRes()) return;
       const loader = new TextureLoader();
-      const loaded: THREE.Texture[] = [];
+      const loaded = [];
       const onLoad = () => {
         if (cancelled) return;
         // optimize and set
@@ -70,7 +70,7 @@ export default function Earth() {
 
     const idle = (cb) => {
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(cb, { timeout: 1500 });
+        window.requestIdleCallback(cb, { timeout: 1500 });
       } else {
         setTimeout(cb, 600);
       }

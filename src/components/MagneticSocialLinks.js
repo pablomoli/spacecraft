@@ -43,13 +43,12 @@ const socialLinks = [
 
 function MagneticSocialLinks() {
   const containerRef = useRef(null);
-  const mousePosRef = useRef({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const linkRefs = useRef([]);
   const iconRefs = useRef([]);
   const [mounted, setMounted] = useState(false);
-  const rafRef = useRef(null);
-  const settersRef = useRef({ links: [], icons: [] });
+  const originalPositions = useRef([]);
 
   const handleSocialClick = (url) => {
     if (url.startsWith("/")) {
@@ -62,9 +61,9 @@ function MagneticSocialLinks() {
   // Entrance animation
   useEffect(() => {
     setMounted(true);
-    
+
     // Staggered entrance animation
-    gsap.fromTo(linkRefs.current, 
+    gsap.fromTo(linkRefs.current,
       {
         scale: 0,
         opacity: 0,
@@ -77,7 +76,21 @@ function MagneticSocialLinks() {
         duration: 0.6,
         stagger: 0.1,
         ease: "back.out(1.7)",
-        delay: 0.5
+        delay: 0.5,
+        onComplete: () => {
+          // Store original positions after animation completes
+          if (containerRef.current) {
+            const containerRect = containerRef.current.getBoundingClientRect();
+            originalPositions.current = linkRefs.current.map(link => {
+              if (!link) return null;
+              const rect = link.getBoundingClientRect();
+              return {
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top + rect.height / 2
+              };
+            });
+          }
+        }
       }
     );
   }, []);
@@ -89,19 +102,15 @@ function MagneticSocialLinks() {
 
     const handleMouseMove = (e) => {
       const rect = container.getBoundingClientRect();
-      mousePosRef.current = {
+      setMousePos({
         x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      };
+        y: e.clientY - rect.top
+      });
     };
 
     const handleMouseEnter = () => setIsHovering(true);
     const handleMouseLeave = () => {
       setIsHovering(false);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
       // Reset all icons
       linkRefs.current.forEach(link => {
         if (link) {
@@ -137,87 +146,82 @@ function MagneticSocialLinks() {
     };
   }, []);
 
-  // Magnetic and pressure effects via rAF + quick setters
+  // Magnetic and pressure effects
   useEffect(() => {
-    if (!mounted) return;
+    if (!isHovering || !mounted || !originalPositions.current.length) return;
 
-    // Build quick setters lazily when links exist
-    if (!settersRef.current.links.length && linkRefs.current.length) {
-      settersRef.current.links = linkRefs.current.map((el) => ({
-        x: el ? gsap.quickSetter(el, "x", "px") : null,
-        y: el ? gsap.quickSetter(el, "y", "px") : null,
-        scale: el ? gsap.quickSetter(el, "scale") : null,
-        rotation: el ? gsap.quickSetter(el, "rotation") : null,
-      }));
-      settersRef.current.icons = iconRefs.current.map((el) =>
-        el ? gsap.quickSetter(el, "rotation") : null
-      );
-    }
+    linkRefs.current.forEach((link, index) => {
+      if (!link || !originalPositions.current[index]) return;
 
-    const magneticRadius = 50;
-    const magneticStrength = 12;
-    const pressureStrength = 0.3;
+      // Use stored original position instead of current transformed position
+      const originalPos = originalPositions.current[index];
+      const linkCenterX = originalPos.x;
+      const linkCenterY = originalPos.y;
 
-    const loop = () => {
-      if (!isHovering) return;
-      const containerRect = containerRef.current?.getBoundingClientRect();
-      if (!containerRect) return;
+      const deltaX = mousePos.x - linkCenterX;
+      const deltaY = mousePos.y - linkCenterY;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-      linkRefs.current.forEach((link, index) => {
-        if (!link) return;
-        const rect = link.getBoundingClientRect();
+      const magneticRadius = 50;
+      const magneticStrength = 12;
+      const pressureStrength = 0.3;
 
-        const linkCenterX = rect.left - containerRect.left + rect.width / 2;
-        const linkCenterY = rect.top - containerRect.top + rect.height / 2;
+      if (distance < magneticRadius) {
+        const force = (magneticRadius - distance) / magneticRadius;
+        const angle = Math.atan2(deltaY, deltaX);
 
-        const deltaX = mousePosRef.current.x - linkCenterX;
-        const deltaY = mousePosRef.current.y - linkCenterY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        // Magnetic movement (toward cursor)
+        const moveX = Math.cos(angle) * force * magneticStrength;
+        const moveY = Math.sin(angle) * force * magneticStrength;
 
-        const setters = settersRef.current.links[index];
-        const iconSetter = settersRef.current.icons[index];
+        // Pressure effect (scale based on proximity)
+        const scale = 1 + force * pressureStrength;
+        const rotation = force * 15; // Slight rotation
 
-        if (distance < magneticRadius) {
-          const force = (magneticRadius - distance) / magneticRadius;
-          const angle = Math.atan2(deltaY, deltaX);
+        gsap.to(link, {
+          x: moveX,
+          y: moveY,
+          scale: scale,
+          rotation: rotation,
+          duration: 0.3,
+          ease: "power3.out",
+          overwrite: "auto"
+        });
 
-          const moveX = Math.cos(angle) * force * magneticStrength;
-          const moveY = Math.sin(angle) * force * magneticStrength;
-          const scale = 1 + force * pressureStrength;
-          const rotation = force * 15;
-
-          setters?.x(moveX);
-          setters?.y(moveY);
-          setters?.scale(scale);
-          setters?.rotation(rotation);
-
-          if (iconSetter) {
-            const orbitalRotation = Math.sin(Date.now() * 0.003) * 10 * force;
-            iconSetter(orbitalRotation);
-          }
-        } else {
-          setters?.x(0);
-          setters?.y(0);
-          setters?.scale(1);
-          setters?.rotation(0);
-          if (iconSetter) iconSetter(0);
+        // Icon orbital motion
+        const icon = iconRefs.current[index];
+        if (icon) {
+          const orbitalRotation = Math.sin(Date.now() * 0.003) * 10 * force;
+          gsap.to(icon, {
+            rotation: orbitalRotation,
+            duration: 0.2,
+            ease: "none",
+            overwrite: "auto"
+          });
         }
-      });
+      } else {
+        gsap.to(link, {
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotation: 0,
+          duration: 0.4,
+          ease: "power3.out",
+          overwrite: "auto"
+        });
 
-      rafRef.current = requestAnimationFrame(loop);
-    };
-
-    if (isHovering && !rafRef.current) {
-      rafRef.current = requestAnimationFrame(loop);
-    }
-
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
+        const icon = iconRefs.current[index];
+        if (icon) {
+          gsap.to(icon, {
+            rotation: 0,
+            duration: 0.4,
+            ease: "power3.out",
+            overwrite: "auto"
+          });
+        }
       }
-    };
-  }, [isHovering, mounted]);
+    });
+  }, [mousePos, isHovering, mounted]);
 
   return (
     <div className="social-links" ref={containerRef}>
@@ -251,14 +255,14 @@ function MagneticSocialLinks() {
               });
             }
           }}
-        
-          <span 
-            className="social-icon" 
+        >
+          <span
+            className="social-icon"
             ref={el => iconRefs.current[index] = el}
           >
             {link.icon}
           </span>
-          
+
           {/* Glow effect */}
           <div className="social-glow" />
         </button>
@@ -325,12 +329,12 @@ function MagneticSocialLinks() {
             left: 1rem;
             bottom: 1rem;
           }
-          
+
           .social-link.magnetic {
             width: 40px;
             height: 40px;
           }
-          
+
           .social-icon svg {
             width: 18px;
             height: 18px;

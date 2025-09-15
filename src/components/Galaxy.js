@@ -204,8 +204,20 @@ export default function Galaxy({
     const renderer = new Renderer({
       alpha: transparent,
       premultipliedAlpha: false,
+      dpr: Math.min(window.devicePixelRatio || 1, 2),
+      antialias: false,
+      preserveDrawingBuffer: false
     });
     const gl = renderer.gl;
+
+    // Handle context loss gracefully
+    gl.canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      if (animateIdRef.current) {
+        cancelAnimationFrame(animateIdRef.current);
+        animateIdRef.current = null;
+      }
+    }, false);
 
     if (transparent) {
       gl.enable(gl.BLEND);
@@ -350,19 +362,31 @@ export default function Galaxy({
     }
 
     return () => {
+      // Cancel animation frame first
+      if (animateIdRef.current) {
+        cancelAnimationFrame(animateIdRef.current);
+        animateIdRef.current = null;
+      }
 
-      if (animateIdRef.current) cancelAnimationFrame(animateIdRef.current);
-      animateIdRef.current = null;
+      // Remove event listeners
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", handleVisibility);
       if (mouseInteraction) {
         ctn.removeEventListener("mousemove", handleMouseMove);
         ctn.removeEventListener("mouseleave", handleMouseLeave);
       }
-      if (ctn && gl.canvas && ctn.contains(gl.canvas)) {
-        ctn.removeChild(gl.canvas);
+
+      // Properly dispose of WebGL resources
+      if (gl && gl.canvas) {
+        // Remove canvas from DOM
+        if (ctn && ctn.contains(gl.canvas)) {
+          ctn.removeChild(gl.canvas);
+        }
+
+        // Don't force lose context - let browser handle it naturally
+        // This prevents the "context lost" warning
+        gl.renderer = null;
       }
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, [
     focal,

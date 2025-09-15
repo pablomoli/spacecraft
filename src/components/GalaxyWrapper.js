@@ -32,12 +32,11 @@ const GalaxyWrapper = memo(function GalaxyWrapper({
   isWormholeTransition = false,
   transitionDuration = 2000,
   onTransitionComplete,
-  ...props 
+  // ignore extra props to keep state/effects stable
 }) {
   const [settings, setSettings] = useState(() => ({
     ...DEFAULT_GALAXY_SETTINGS,
     ...(config || {}),
-    ...props
   }));
 
   // Debounce config updates to prevent rapid re-renders
@@ -48,10 +47,18 @@ const GalaxyWrapper = memo(function GalaxyWrapper({
       setSettings(WORMHOLE_TRANSITION_SETTINGS);
 
       const timer = setTimeout(() => {
-        setSettings({
-          ...DEFAULT_GALAXY_SETTINGS,
-          ...(debouncedConfig || {}),
-          ...props
+        setSettings(prev => {
+          const next = {
+            ...DEFAULT_GALAXY_SETTINGS,
+            ...(debouncedConfig || {}),
+          };
+          // shallow comparison to avoid needless state updates
+          const keys = Object.keys(next);
+          for (let i = 0; i < keys.length; i++) {
+            const k = keys[i];
+            if (prev[k] !== next[k]) return next;
+          }
+          return prev;
         });
         if (onTransitionComplete) {
           onTransitionComplete();
@@ -60,12 +67,17 @@ const GalaxyWrapper = memo(function GalaxyWrapper({
 
       return () => clearTimeout(timer);
     } else if (debouncedConfig) {
-      setSettings(prev => ({
-        ...prev,
-        ...debouncedConfig
-      }));
+      setSettings(prev => {
+        const next = { ...prev, ...debouncedConfig };
+        const keys = Object.keys(debouncedConfig);
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i];
+          if (prev[k] !== next[k]) return next;
+        }
+        return prev;
+      });
     }
-  }, [isWormholeTransition, transitionDuration, onTransitionComplete, debouncedConfig, props]);
+  }, [isWormholeTransition, transitionDuration, onTransitionComplete, debouncedConfig]);
 
   return (
     <Galaxy 
