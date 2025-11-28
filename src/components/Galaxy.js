@@ -36,27 +36,16 @@ uniform float uRepulsionStrength;
 uniform float uMouseActiveFactor;
 uniform float uAutoCenterRepulsion;
 uniform bool uTransparent;
-
- // Warp progress and targets
- uniform float uWarpProgress; // 0.0 -> 1.0
- uniform float uWarpDensity;
- uniform float uWarpGlowIntensity;
- uniform float uWarpSaturation;
- uniform float uWarpHueShift;
- uniform float uWarpRotationSpeed;
- uniform float uWarpAutoCenterRepulsion;
- uniform float uWarpStarSpeed;
- uniform float uWarpSpeed;
- uniform float uWarpTwinkleIntensity;
- // Exit settle progress (phase 3): 0 -> 1 only during return
- uniform float uExitProgress;
+// Exit settle progress (phase 3): 0 -> 1 only during return
+uniform float uExitProgress;
 
 varying vec2 vUv;
 
-#define NUM_LAYER 4.0
 #define STAR_COLOR_CUTOFF 0.2
 #define MAT45 mat2(0.7071, -0.7071, 0.7071, 0.7071)
 #define PERIOD 3.0
+
+uniform float uNumLayers;
 
 float Hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -99,17 +88,7 @@ float Star(vec2 uv, float flare) {
 vec3 StarLayer(vec2 uv) {
   vec3 col = vec3(0.0);
 
-  // Local effective params for this layer
-  float p = smoothstep(0.0, 1.0, uWarpProgress);
-  // Match motion ramp used in main(): even more delayed onset
-  float ps = clamp((p - 0.65) / 0.35, 0.0, 1.0);
-  float speedBlend = pow(ps, 3.0);
-  float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
-  float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
-  float satEff = mix(uSaturation, uWarpSaturation, p);
-  float twinkleIntensityEff = mix(uTwinkleIntensity, uWarpTwinkleIntensity, p);
-
-  vec2 gv = fract(uv) - 0.5; 
+  vec2 gv = fract(uv) - 0.5;
   vec2 id = floor(uv);
 
   for (int y = -1; y <= 1; y++) {
@@ -125,20 +104,20 @@ vec3 StarLayer(vec2 uv) {
       float blu = smoothstep(STAR_COLOR_CUTOFF, 1.0, Hash21(si + 3.0)) + STAR_COLOR_CUTOFF;
       float grn = min(red, blu) * seed;
       vec3 base = vec3(red, grn, blu);
-      
+
       float hue = atan(base.g - base.r, base.b - base.r) / (2.0 * 3.14159) + 0.5;
-      hue = fract(hue + hueShiftEff / 360.0);
-      float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * satEff;
+      hue = fract(hue + uHueShift / 360.0);
+      float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * uSaturation;
       float val = max(max(base.r, base.g), base.b);
       base = hsv2rgb(vec3(hue, sat, val));
 
-      vec2 pad = vec2(tris(seed * 34.0 + uTime * speedEff / 10.0), tris(seed * 38.0 + uTime * speedEff / 30.0)) - 0.5;
+      vec2 pad = vec2(tris(seed * 34.0 + uTime * uSpeed / 10.0), tris(seed * 38.0 + uTime * uSpeed / 30.0)) - 0.5;
 
       float star = Star(gv - offset - pad, flareSize);
       vec3 color = base;
 
-      float twinkle = trisn(uTime * speedEff + seed * 6.2831) * 0.5 + 1.0;
-      twinkle = mix(1.0, twinkle, twinkleIntensityEff);
+      float twinkle = trisn(uTime * uSpeed + seed * 6.2831) * 0.5 + 1.0;
+      twinkle = mix(1.0, twinkle, uTwinkleIntensity);
       star *= twinkle;
       
       col += star * size * color;
@@ -149,33 +128,6 @@ vec3 StarLayer(vec2 uv) {
 }
 
 void main() {
-  // Progress with a soft ease for smoother visuals
-  float p = smoothstep(0.0, 1.0, uWarpProgress);
-  
-  // Derive effective parameters by blending base->warp
-  float densityEff = mix(uDensity, uWarpDensity, p);
-  float glowEff = mix(uGlowIntensity, uWarpGlowIntensity, p);
-  float satEff = mix(uSaturation, uWarpSaturation, p);
-  float hueShiftEff = mix(uHueShift, uWarpHueShift, p);
-  float rotationSpeedEff = mix(uRotationSpeed, uWarpRotationSpeed, p);
-  float autoCenterRepulsionEff = mix(uAutoCenterRepulsion, uWarpAutoCenterRepulsion, p);
-  // Motion ramps: even more delayed onset
-  // No motion until ~65%, streaks near ~85%+
-  float ps = clamp((p - 0.65) / 0.35, 0.0, 1.0);
-  float pss = clamp((p - 0.85) / 0.15, 0.0, 1.0);
-  float speedBlend = pow(ps, 3.0);
-  float starSpeedBlend = pow(pss, 3.4);
-  
-  // Exit snap: damp motion sharply near the very end of the return
-  // This keeps motion perceptible until late, then snaps to static.
-  float E_snap = smoothstep(0.0, 1.0, uExitProgress);
-  float exitSnap = pow(E_snap, 6.0);
-  float exitSnapStars = pow(E_snap, 8.0);
-  speedBlend *= (1.0 - exitSnap);
-  starSpeedBlend *= (1.0 - exitSnapStars);
-  float starSpeedEff = mix(uStarSpeed, uWarpStarSpeed, starSpeedBlend);
-  float speedEff = mix(uSpeed, uWarpSpeed, speedBlend);
-
   vec2 focalPx = uFocal * uResolution.xy;
   vec2 uv = (vUv * uResolution.xy - focalPx) / uResolution.y;
   
@@ -189,11 +141,11 @@ void main() {
   uv += nrm * (0.025 * Eo * sin(16.0 * r - 6.0 * Eo));
 
   vec2 mouseNorm = uMouse - vec2(0.5);
-  
-  if (autoCenterRepulsionEff > 0.0) {
+
+  if (uAutoCenterRepulsion > 0.0) {
     vec2 centerUV = vec2(0.0, 0.0); // Center in UV space
     float centerDist = length(uv - centerUV);
-    vec2 repulsion = normalize(uv - centerUV) * (autoCenterRepulsionEff / (centerDist + 0.1));
+    vec2 repulsion = normalize(uv - centerUV) * (uAutoCenterRepulsion / (centerDist + 0.1));
     uv += repulsion * 0.05;
   } else if (uMouseRepulsion) {
     vec2 mousePosUV = (uMouse * uResolution.xy - focalPx) / uResolution.y;
@@ -205,7 +157,7 @@ void main() {
     uv += mouseOffset;
   }
 
-  float autoRotAngle = uTime * rotationSpeedEff;
+  float autoRotAngle = uTime * uRotationSpeed;
   mat2 autoRot = mat2(cos(autoRotAngle), -sin(autoRotAngle), sin(autoRotAngle), cos(autoRotAngle));
   uv = autoRot * uv;
 
@@ -213,11 +165,13 @@ void main() {
 
   vec3 col = vec3(0.0);
 
-  for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
-    float depth = fract(i + uTime * starSpeedEff);
-    float scale = mix(20.0 * densityEff, 0.5 * densityEff, depth);
+  for (float i = 0.0; i < 4.0; i += 1.0) {
+    float layerIndex = i / 4.0;
+    if (i >= uNumLayers) continue;
+    float depth = fract(layerIndex + uTime * uStarSpeed);
+    float scale = mix(20.0 * uDensity, 0.5 * uDensity, depth);
     float fade = depth * smoothstep(1.0, 0.9, depth);
-    col += StarLayer(uv * scale + i * 453.32) * fade;
+    col += StarLayer(uv * scale + layerIndex * 453.32) * fade;
   }
 
   if (uTransparent) {
@@ -255,6 +209,7 @@ const Galaxy = forwardRef(function Galaxy({
   rotationSpeed = 0.1,
   autoCenterRepulsion = 0,
   transparent = true,
+  quality = 'high', // 'low' = 2 layers, 'medium' = 3 layers, 'high' = 4 layers
   ...rest
 }, ref) {
   const ctnDom = useRef(null);
@@ -265,28 +220,93 @@ const Galaxy = forwardRef(function Galaxy({
   const animateIdRef = useRef(null);
   const isVisibleRef = useRef(true);
   const programRef = useRef(null);
+  const currentWarpProgress = useRef(0.0);
+  const currentExitProgress = useRef(0.0);
+
+  // Convert quality setting to number of layers
+  const getNumLayers = (qualitySetting) => {
+    switch (qualitySetting) {
+      case 'low': return 2;
+      case 'medium': return 3;
+      case 'high': return 4;
+      default: return 4;
+    }
+  };
 
   // Expose uniform update method via ref
   useImperativeHandle(ref, () => ({
     updateUniforms: (newValues) => {
-      if (programRef.current) {
-        const program = programRef.current;
-        if (newValues.density !== undefined) program.uniforms.uDensity.value = newValues.density;
-        if (newValues.speed !== undefined) program.uniforms.uSpeed.value = newValues.speed;
-        if (newValues.glowIntensity !== undefined) program.uniforms.uGlowIntensity.value = newValues.glowIntensity;
-        if (newValues.rotationSpeed !== undefined) program.uniforms.uRotationSpeed.value = newValues.rotationSpeed;
-        if (newValues.autoCenterRepulsion !== undefined) program.uniforms.uAutoCenterRepulsion.value = newValues.autoCenterRepulsion;
-        if (newValues.saturation !== undefined) program.uniforms.uSaturation.value = newValues.saturation;
-        if (newValues.hueShift !== undefined) program.uniforms.uHueShift.value = newValues.hueShift;
-        if (newValues.twinkleIntensity !== undefined) program.uniforms.uTwinkleIntensity.value = newValues.twinkleIntensity;
-        if (newValues.repulsionStrength !== undefined) program.uniforms.uRepulsionStrength.value = newValues.repulsionStrength;
-        if (newValues.mouseRepulsion !== undefined) program.uniforms.uMouseRepulsion.value = newValues.mouseRepulsion;
-        if (newValues.starSpeed !== undefined) program.uniforms.uStarSpeed.value = newValues.starSpeed * (newValues.speed || speed) * 0.1;
-        if (newValues.warpProgress !== undefined) program.uniforms.uWarpProgress.value = newValues.warpProgress;
-        if (newValues.exitProgress !== undefined) program.uniforms.uExitProgress.value = newValues.exitProgress;
+      if (!programRef.current) return;
+      const program = programRef.current;
+
+      // Track warp/exit progress for interpolation
+      if (newValues.warpProgress !== undefined) {
+        currentWarpProgress.current = newValues.warpProgress;
       }
+      if (newValues.exitProgress !== undefined) {
+        currentExitProgress.current = newValues.exitProgress;
+        program.uniforms.uExitProgress.value = newValues.exitProgress;
+      }
+
+      // Compute interpolated values on CPU
+      const p = Math.max(0, Math.min(1, currentWarpProgress.current)); // clamp 0-1
+      const pSmooth = p * p * (3 - 2 * p); // smoothstep approximation
+
+      // Motion ramps matching original shader logic
+      const ps = Math.max(0, Math.min(1, (pSmooth - 0.65) / 0.35));
+      const pss = Math.max(0, Math.min(1, (pSmooth - 0.85) / 0.15));
+      const speedBlend = Math.pow(ps, 3.0);
+      const starSpeedBlend = Math.pow(pss, 3.4);
+
+      // Exit snap damping
+      const E_snap = currentExitProgress.current * currentExitProgress.current * (3 - 2 * currentExitProgress.current);
+      const exitSnap = Math.pow(E_snap, 6.0);
+      const exitSnapStars = Math.pow(E_snap, 8.0);
+      const finalSpeedBlend = speedBlend * (1.0 - exitSnap);
+      const finalStarSpeedBlend = starSpeedBlend * (1.0 - exitSnapStars);
+
+      // Interpolate uniforms
+      const baseDensity = newValues.density !== undefined ? newValues.density : density;
+      const baseSpeed = newValues.speed !== undefined ? newValues.speed : speed;
+      const baseStarSpeed = newValues.starSpeed !== undefined ? newValues.starSpeed : starSpeed;
+      const baseGlow = newValues.glowIntensity !== undefined ? newValues.glowIntensity : glowIntensity;
+      const baseRotation = newValues.rotationSpeed !== undefined ? newValues.rotationSpeed : rotationSpeed;
+      const baseRepulsion = newValues.autoCenterRepulsion !== undefined ? newValues.autoCenterRepulsion : autoCenterRepulsion;
+      const baseSaturation = newValues.saturation !== undefined ? newValues.saturation : saturation;
+      const baseHueShift = newValues.hueShift !== undefined ? newValues.hueShift : hueShift;
+      const baseTwinkle = newValues.twinkleIntensity !== undefined ? newValues.twinkleIntensity : twinkleIntensity;
+
+      // Warp targets from config
+      const warpDensity = WORMHOLE_TRANSITION_SETTINGS.density;
+      const warpSpeed = WORMHOLE_TRANSITION_SETTINGS.speed;
+      const warpStarSpeed = WORMHOLE_TRANSITION_SETTINGS.starSpeed;
+      const warpGlow = WORMHOLE_TRANSITION_SETTINGS.glowIntensity;
+      const warpRotation = WORMHOLE_TRANSITION_SETTINGS.rotationSpeed;
+      const warpRepulsion = WORMHOLE_TRANSITION_SETTINGS.autoCenterRepulsion;
+      const warpSaturation = WORMHOLE_TRANSITION_SETTINGS.saturation;
+      const warpHueShift = WORMHOLE_TRANSITION_SETTINGS.hueShift;
+      const warpTwinkle = WORMHOLE_TRANSITION_SETTINGS.twinkleIntensity;
+
+      // Interpolate and set uniforms
+      program.uniforms.uDensity.value = baseDensity + (warpDensity - baseDensity) * pSmooth;
+      program.uniforms.uGlowIntensity.value = baseGlow + (warpGlow - baseGlow) * pSmooth;
+      program.uniforms.uSaturation.value = baseSaturation + (warpSaturation - baseSaturation) * pSmooth;
+      program.uniforms.uHueShift.value = baseHueShift + (warpHueShift - baseHueShift) * pSmooth;
+      program.uniforms.uRotationSpeed.value = baseRotation + (warpRotation - baseRotation) * pSmooth;
+      program.uniforms.uAutoCenterRepulsion.value = baseRepulsion + (warpRepulsion - baseRepulsion) * pSmooth;
+      program.uniforms.uTwinkleIntensity.value = baseTwinkle + (warpTwinkle - baseTwinkle) * pSmooth;
+
+      // Speed uses delayed blend
+      const effectiveSpeed = baseSpeed + (warpSpeed - baseSpeed) * finalSpeedBlend;
+      const effectiveStarSpeed = baseStarSpeed + (warpStarSpeed - baseStarSpeed) * finalStarSpeedBlend;
+      program.uniforms.uSpeed.value = effectiveSpeed;
+      program.uniforms.uStarSpeed.value = effectiveStarSpeed * effectiveSpeed * 0.1;
+
+      // Direct updates for other properties
+      if (newValues.repulsionStrength !== undefined) program.uniforms.uRepulsionStrength.value = newValues.repulsionStrength;
+      if (newValues.mouseRepulsion !== undefined) program.uniforms.uMouseRepulsion.value = newValues.mouseRepulsion;
     }
-  }), [speed]);
+  }), [density, speed, starSpeed, glowIntensity, rotationSpeed, autoCenterRepulsion, saturation, hueShift, twinkleIntensity]);
 
   useEffect(() => {
     if (!ctnDom.current) return;
@@ -356,19 +376,8 @@ const Galaxy = forwardRef(function Galaxy({
         uMouseActiveFactor: { value: 0.0 },
         uAutoCenterRepulsion: { value: autoCenterRepulsion },
         uTransparent: { value: transparent },
-        // Warp uniforms
-        uWarpProgress: { value: 0.0 },
-        uWarpDensity: { value: WORMHOLE_TRANSITION_SETTINGS.density },
-        uWarpGlowIntensity: { value: WORMHOLE_TRANSITION_SETTINGS.glowIntensity },
-        uWarpSaturation: { value: WORMHOLE_TRANSITION_SETTINGS.saturation },
-        uWarpHueShift: { value: WORMHOLE_TRANSITION_SETTINGS.hueShift },
-        uWarpRotationSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.rotationSpeed },
-        uWarpAutoCenterRepulsion: { value: WORMHOLE_TRANSITION_SETTINGS.autoCenterRepulsion },
-        // Precompute warp starSpeed effective (matches JS combo logic: * speed * 0.1)
-        uWarpStarSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.starSpeed * WORMHOLE_TRANSITION_SETTINGS.speed * 0.1 },
-        uWarpSpeed: { value: WORMHOLE_TRANSITION_SETTINGS.speed },
-        uWarpTwinkleIntensity: { value: WORMHOLE_TRANSITION_SETTINGS.twinkleIntensity },
         uExitProgress: { value: 0.0 },
+        uNumLayers: { value: getNumLayers(quality) },
       },
     });
 
@@ -476,6 +485,7 @@ const Galaxy = forwardRef(function Galaxy({
     repulsionStrength,
     autoCenterRepulsion,
     transparent,
+    quality,
   ]);
 
   // Apply prop-driven uniform updates only when props change,
@@ -493,6 +503,7 @@ const Galaxy = forwardRef(function Galaxy({
     program.uniforms.uTwinkleIntensity.value = twinkleIntensity;
     program.uniforms.uRepulsionStrength.value = repulsionStrength;
     program.uniforms.uMouseRepulsion.value = mouseRepulsion;
+    program.uniforms.uNumLayers.value = getNumLayers(quality);
     // Compound value derived from starSpeed & speed
     program.uniforms.uStarSpeed.value = starSpeed * speed * 0.1;
   }, [
@@ -507,6 +518,7 @@ const Galaxy = forwardRef(function Galaxy({
     repulsionStrength,
     mouseRepulsion,
     starSpeed,
+    quality,
   ]);
 
   return <div ref={ctnDom} className="galaxy-container" {...rest} />;
