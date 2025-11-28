@@ -479,7 +479,104 @@ body::before {
   margin-bottom: 2rem;
 }
 
-/* Tech grid with SVG icons */
+@keyframes float1 {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(1.9px, -4.6px); }
+  20% { transform: translate(1.2px, -8.8px); }
+  30% { transform: translate(-0.6px, -12px); }
+  40% { transform: translate(-2px, -13.8px); }
+  50% { transform: translate(-2px, -14px); }
+  60% { transform: translate(-0.6px, -12px); }
+  70% { transform: translate(1.2px, -8.8px); }
+  80% { transform: translate(1.9px, -4.6px); }
+  90% { transform: translate(1px, -1px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+@keyframes float2 {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(-2.3px, -7.8px); }
+  20% { transform: translate(-2.6px, -15.3px); }
+  30% { transform: translate(-0.8px, -21px); }
+  40% { transform: translate(1.6px, -24.4px); }
+  50% { transform: translate(2.6px, -24.7px); }
+  60% { transform: translate(1.6px, -21px); }
+  70% { transform: translate(-0.8px, -15.3px); }
+  80% { transform: translate(-2.3px, -7.8px); }
+  90% { transform: translate(-1.3px, -2px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+@keyframes float3 {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(1.3px, -2.5px); }
+  20% { transform: translate(1.3px, -4.9px); }
+  30% { transform: translate(0px, -6.7px); }
+  40% { transform: translate(-1.3px, -7.7px); }
+  50% { transform: translate(-1.4px, -7.7px); }
+  60% { transform: translate(-0.7px, -6.7px); }
+  70% { transform: translate(0.7px, -4.9px); }
+  80% { transform: translate(1.3px, -2.5px); }
+  90% { transform: translate(0.8px, -0.6px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+@keyframes float4 {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(-2.9px, -8.1px); }
+  20% { transform: translate(-3px, -15.9px); }
+  30% { transform: translate(-0.9px, -22.2px); }
+  40% { transform: translate(1.8px, -25.8px); }
+  50% { transform: translate(3px, -26.3px); }
+  60% { transform: translate(1.8px, -22.2px); }
+  70% { transform: translate(-0.9px, -15.9px); }
+  80% { transform: translate(-2.9px, -8.1px); }
+  90% { transform: translate(-1.5px, -1.8px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+@keyframes float5 {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(2.6px, -3.8px); }
+  20% { transform: translate(2.2px, -7.4px); }
+  30% { transform: translate(0.4px, -10.1px); }
+  40% { transform: translate(-1.6px, -11.7px); }
+  50% { transform: translate(-2.3px, -11.9px); }
+  60% { transform: translate(-1.6px, -10.1px); }
+  70% { transform: translate(0.4px, -7.4px); }
+  80% { transform: translate(2.2px, -3.8px); }
+  90% { transform: translate(1.8px, -0.9px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+@keyframes float6 {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(-2.3px, -7.9px); }
+  20% { transform: translate(-2.4px, -14.9px); }
+  30% { transform: translate(-0.2px, -18.5px); }
+  40% { transform: translate(2.2px, -19px); }
+  50% { transform: translate(2.4px, -18px); }
+  60% { transform: translate(1px, -14.9px); }
+  70% { transform: translate(-1.4px, -10.1px); }
+  80% { transform: translate(-2.3px, -4.8px); }
+  90% { transform: translate(-1px, -1.2px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+@keyframes float7 {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(1.5px, -3.8px); }
+  20% { transform: translate(1.3px, -7.4px); }
+  30% { transform: translate(-0.2px, -9.4px); }
+  40% { transform: translate(-1.4px, -10.1px); }
+  50% { transform: translate(-1.6px, -9.8px); }
+  60% { transform: translate(-0.8px, -7.8px); }
+  70% { transform: translate(0.6px, -5px); }
+  80% { transform: translate(1.4px, -2.2px); }
+  90% { transform: translate(1px, -0.5px); }
+  100% { transform: translate(0px, 0px); }
+}
+
 .tech-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
@@ -500,13 +597,52 @@ body::before {
   border-radius: 12px;
   transition: all 0.3s ease;
   cursor: pointer;
+  will-change: transform;
+}
+
+.tech-item-icon[data-tech="JavaScript"] {
+  animation: float1 6s linear infinite;
+  animation-delay: 0s;
+}
+
+.tech-item-icon[data-tech="TypeScript"] {
+  animation: float2 7s linear infinite;
+  animation-delay: 0.5s;
+}
+
+.tech-item-icon[data-tech="Python"] {
+  animation: float3 8s linear infinite;
+  animation-delay: 1s;
+}
+
+.tech-item-icon[data-tech="Node.js"] {
+  animation: float4 6.4s linear infinite;
+  animation-delay: 1.5s;
+}
+
+.tech-item-icon[data-tech="Blender"] {
+  animation: float5 7.6s linear infinite;
+  animation-delay: 2s;
+}
+
+.tech-item-icon[data-tech="React"] {
+  animation: float6 6.6s linear infinite;
+  animation-delay: 2.5s;
+}
+
+.tech-item-icon[data-tech="Three.js"] {
+  animation: float7 7.2s linear infinite;
+  animation-delay: 0.8s;
 }
 
 .tech-item-icon:hover {
   background: rgba(100, 181, 246, 0.1);
   border-color: rgba(100, 181, 246, 0.4);
-  transform: translateY(-4px) scale(1.05);
   box-shadow: 0 8px 25px rgba(100, 181, 246, 0.3);
+}
+
+.tech-item-icon:hover .tech-svg {
+  transform: translateY(-4px) scale(1.1);
 }
 
 .tech-svg {
@@ -515,17 +651,13 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .tech-svg svg {
   width: 100%;
   height: 100%;
   transition: all 0.3s ease;
-}
-
-.tech-item-icon:hover .tech-svg svg {
-  transform: scale(1.1);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .tech-tooltip {
