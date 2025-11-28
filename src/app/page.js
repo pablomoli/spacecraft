@@ -1,7 +1,6 @@
 "use client";
 
 import React, {
-  Suspense,
   useState,
   useEffect,
   useCallback,
@@ -9,29 +8,17 @@ import React, {
   useMemo,
   useReducer,
 } from "react";
-import { Canvas } from "@react-three/fiber";
 import { useScroll } from "../hooks/useScroll";
 import { useLenis } from "../hooks/useLenis";
 import Overlay from "../components/Overlay";
 import NavBar from "../components/NavBar";
 import MagneticSocialLinks from "../components/MagneticSocialLinks";
-import Scene from "../components/Scene";
-import GalaxyWrapper from "../components/GalaxyWrapper";
+import SceneContainer from "../components/SceneContainer";
 import { DEFAULT_GALAXY_SETTINGS, WORMHOLE_ANIMATION_CONFIG } from "../components/galaxyConfig";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(useGSAP);
-
-// Simple loading component for Suspense fallback
-function LoadingFallback() {
-  return (
-    <mesh>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color="#1a1a1a" />
-    </mesh>
-  );
-}
 
 // Wormhole progress indicator component
 function WormholeProgress({ progress }) {
@@ -561,46 +548,23 @@ export default function Home() {
 
   return (
     <div className="app">
-      {galaxyEnabled && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            zIndex: scrollData.scrollPhase === "wormhole" ? 9999 : 0,
-            pointerEvents: "none",
-          }}
-        >
-          <GalaxyWrapper
-            ref={galaxyRef}
-            config={scrollPhase === "wormhole" ? initialGalaxyConfig : galaxyConfig}
-          />
-        </div>
-      )}
-
-      <Canvas
-        className="canvas"
-        style={{
-          opacity: showUI ? 1 : 0,
-          transition: "opacity 0.2s ease",
-        }}
-      >
-        <Suspense fallback={<LoadingFallback />}>
-          <Scene
-            scrollProgress={scrollData.scrollProgress}
-            extraScrollProgress={scrollData.extraScrollProgress}
-            scrollPhase={scrollData.scrollPhase}
-          />
-        </Suspense>
-      </Canvas>
+      <SceneContainer
+        galaxyEnabled={galaxyEnabled}
+        galaxyRef={galaxyRef}
+        scrollData={scrollData}
+        initialGalaxyConfig={initialGalaxyConfig}
+        galaxyConfig={galaxyConfig}
+        scrollPhase={scrollPhase}
+        showUI={showUI}
+      />
 
       <div
         style={{
           opacity: showUI ? 1 : 0,
           transition: "opacity 0.2s ease",
           pointerEvents: showUI ? "auto" : "none",
+          position: "relative",
+          zIndex: 100,
         }}
       >
         <NavBar currentSection={scrollData.currentSection} />
@@ -615,6 +579,8 @@ export default function Home() {
         style={{
           opacity: showUI ? 1 : 0,
           transition: "opacity 0.2s ease",
+          position: "relative",
+          zIndex: 10,
         }}
       />
 
