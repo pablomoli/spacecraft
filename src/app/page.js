@@ -223,6 +223,16 @@ export default function Home() {
   );
   const [wormholeProgress, setWormholeProgress] = useState(0);
   const [showUI, setShowUI] = useState(true);
+  const [galaxyEnabled, setGalaxyEnabled] = useState(true);
+
+  // Allow disabling galaxy via env or query param (?nogalaxy=1) for perf testing
+  useEffect(() => {
+    const envDisabled = process.env.NEXT_PUBLIC_DISABLE_GALAXY === "true";
+    const paramDisabled =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("nogalaxy");
+    setGalaxyEnabled(!(envDisabled || paramDisabled));
+  }, []);
 
   // Cache height measurements
   const heightMeasurements = useRef({
@@ -551,22 +561,24 @@ export default function Home() {
 
   return (
     <div className="app">
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: scrollData.scrollPhase === "wormhole" ? 9999 : 0,
-          pointerEvents: "none",
-        }}
-      >
-        <GalaxyWrapper
-          ref={galaxyRef}
-          config={scrollPhase === "wormhole" ? initialGalaxyConfig : galaxyConfig}
-        />
-      </div>
+      {galaxyEnabled && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: scrollData.scrollPhase === "wormhole" ? 9999 : 0,
+            pointerEvents: "none",
+          }}
+        >
+          <GalaxyWrapper
+            ref={galaxyRef}
+            config={scrollPhase === "wormhole" ? initialGalaxyConfig : galaxyConfig}
+          />
+        </div>
+      )}
 
       <Canvas
         className="canvas"

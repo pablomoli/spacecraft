@@ -1,12 +1,18 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
-import { TextureLoader } from "three";
+import { TextureLoader, ImageBitmapLoader } from "three";
 
 export default function Earth() {
   const groupRef = useRef();
   const cloudsRef = useRef();
-  const geo = new THREE.SphereGeometry(3, 64, 64);
+  // Memoize geometry; keep segments modest for perf (48 on low-power, otherwise 64)
+  const geo = useMemo(() => {
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const mem = typeof navigator !== "undefined" && navigator.deviceMemory ? navigator.deviceMemory : 4;
+    const segments = mem <= 4 || dpr <= 1 ? 48 : 64;
+    return new THREE.SphereGeometry(3, segments, segments);
+  }, []);
   const [highResLoaded, setHighResLoaded] = useState(false);
   const [earthMapHigh, setEarthMapHigh] = useState(null);
   const [lightsMapHigh, setLightsMapHigh] = useState(null);
@@ -21,8 +27,8 @@ export default function Earth() {
 
   // High-res textures are loaded lazily via TextureLoader after mount
 
-  // Optimize texture settings for both low and high res
-  const optimizeTextures = (textures) => {
+  // Optimize texture settings
+  const optimizeLowRes = (textures) => {
     textures.forEach((texture) => {
       if (texture) {
         texture.generateMipmaps = true;
@@ -33,7 +39,7 @@ export default function Earth() {
     });
   };
 
-  optimizeTextures([earthMapLow, lightsMapLow, cloudsMapLow]);
+  optimizeLowRes([earthMapLow, lightsMapLow, cloudsMapLow]);
 
   // Defer high-res loading to idle and based on device/network
   useEffect(() => {
@@ -48,24 +54,51 @@ export default function Earth() {
       return dpr > 1 && okNet && !saveData && mem >= 4;
     };
 
-    const loadHighRes = () => {
+    const createTexture = (imageBitmap) => {
+      const tex = new THREE.CanvasTexture(imageBitmap);
+      tex.generateMipmaps = false;
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    };
+
+    const loadTextureBitmap = (url) =>
+      new Promise((resolve, reject) => {
+        const loader = new ImageBitmapLoader();
+        loader.setOptions({ imageOrientation: "flipY" });
+        loader.load(
+          url,
+          (imageBitmap) => resolve(createTexture(imageBitmap)),
+          undefined,
+          (err) => reject(err)
+        );
+      });
+
+    const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    const loadHighRes = async () => {
       if (cancelled || !shouldLoadHighRes()) return;
-      const loader = new TextureLoader();
-      const loaded = [];
-      const onLoad = () => {
+      try {
+        const earthTex = await loadTextureBitmap("/earth.webp");
         if (cancelled) return;
-        // optimize and set
-        optimizeTextures(loaded);
-        setEarthMapHigh(loaded[0]);
-        setLightsMapHigh(loaded[1]);
-        setCloudsMapHigh(loaded[2]);
+        setEarthMapHigh(earthTex);
+
+        await pause(100);
+        const lightsTex = await loadTextureBitmap("/earth_lights.webp");
+        if (cancelled) return;
+        setLightsMapHigh(lightsTex);
+
+        await pause(100);
+        const cloudsTex = await loadTextureBitmap("/earth_clouds_ultra.webp");
+        if (cancelled) return;
+        setCloudsMapHigh(cloudsTex);
+
         setHighResLoaded(true);
-      };
-      let pending = 3;
-      const done = () => { if (--pending === 0) onLoad(); };
-      loaded[0] = loader.load('/earth.webp', done);
-      loaded[1] = loader.load('/earth_lights.webp', done);
-      loaded[2] = loader.load('/earth_clouds_ultra.webp', done);
+      } catch (e) {
+        // Swallow errors; remain on low-res if high-res fails
+        console.error("High-res texture load failed", e);
+      }
     };
 
     const idle = (cb) => {
