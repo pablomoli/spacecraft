@@ -887,10 +887,11 @@ body::before {
 }
 
 .project-title {
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: 2.5rem;
+  font-weight: 700;
   color: white;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
+  letter-spacing: -0.5px;
 }
 
 .project-tech {
@@ -925,14 +926,30 @@ body::before {
   margin-bottom: 0.8rem;
   color: #d0d0d0;
   line-height: 1.6;
+  padding: 0.5rem 0.8rem 0.5rem 1.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.highlights-list li:hover {
+  background: rgba(100, 181, 246, 0.08);
+  transform: translateX(8px);
+  color: #e8e8e8;
 }
 
 .highlights-list li::before {
   content: "▸";
   position: absolute;
-  left: 0;
+  left: 0.5rem;
   color: #64b5f6;
   font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.highlights-list li:hover::before {
+  transform: translateX(3px) scale(1.2);
+  color: #81c9ff;
 }
 
 .project-links {
@@ -950,11 +967,32 @@ body::before {
   border: 1px solid rgba(100, 181, 246, 0.3);
   transition: all 0.3s ease;
   font-size: 0.9rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-links a::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(100, 181, 246, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.project-links a:hover::before {
+  width: 200%;
+  height: 200%;
 }
 
 .project-links a:hover {
   background: rgba(100, 181, 246, 0.3);
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(100, 181, 246, 0.4);
 }
 
 /* Contact Section Layout */

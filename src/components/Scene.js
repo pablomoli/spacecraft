@@ -8,6 +8,7 @@ const BASE_CAMERA_RADIUS = 5;
 
 function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   const earthRef = useRef();
+  const lightRef = useRef();
   const { camera } = useThree();
   
   // Initialize camera position
@@ -30,7 +31,16 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
       camera.position.x = Math.sin(angle) * radius;
       camera.position.z = Math.cos(angle) * radius;
       camera.position.y = 0; // Keep height constant
-      
+
+      // Update light position to orbit with camera
+      if (lightRef.current) {
+        const lightAngle = angle;
+        const lightRadius = 8;
+        lightRef.current.position.x = Math.sin(lightAngle) * lightRadius;
+        lightRef.current.position.z = Math.cos(lightAngle) * lightRadius;
+        lightRef.current.position.y = 5;
+      }
+
       // Always look at Earth
       camera.lookAt(0, 0, 0);
     }
@@ -65,7 +75,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   return (
     <>
       <ambientLight intensity={0.2} />
-      <directionalLight position={[5, 5, 5]} intensity={1} />
+      <directionalLight ref={lightRef} position={[5, 5, 5]} intensity={1} />
 
       <group ref={earthRef} position={[0, 0, -1]}>
         <Earth />

@@ -305,24 +305,206 @@ function ExperienceSection() {
 // Interactive Projects Component
 function ProjectsSection() {
   const [selectedProject, setSelectedProject] = useState(projects[0]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const sidebarRefs = useRef([]);
+  const contentRef = useRef(null);
+  const sidebarContainerRef = useRef(null);
+  const highlightRefs = useRef([]);
+
+  useEffect(() => {
+    gsap.fromTo(sidebarRefs.current.filter(Boolean),
+      { x: -30, opacity: 0 },
+      {
+        x: 0,
+        opacity: 1,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: "power2.out",
+        delay: 0.2
+      }
+    );
+
+    if (contentRef.current) {
+      gsap.fromTo(contentRef.current,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out", delay: 0.4 }
+      );
+    }
+
+    gsap.fromTo(highlightRefs.current.filter(Boolean),
+      { x: 30, opacity: 0, scale: 0.9 },
+      {
+        x: 0,
+        opacity: 1,
+        scale: 1,
+        duration: 0.4,
+        stagger: 0.1,
+        ease: "back.out(1.2)",
+        delay: 0.6
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    const container = sidebarContainerRef.current;
+    if (!container) return;
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const magneticRadius = 60;
+    const magneticStrength = isMobile ? 0 : 6;
+
+    const handleMouseMove = (e) => {
+      sidebarRefs.current.forEach((item) => {
+        if (!item) return;
+
+        const rect = item.getBoundingClientRect();
+        const itemCenterX = rect.left + rect.width / 2;
+        const itemCenterY = rect.top + rect.height / 2;
+
+        const deltaX = e.clientX - itemCenterX;
+        const deltaY = e.clientY - itemCenterY;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        if (distance < magneticRadius) {
+          const force = (magneticRadius - distance) / magneticRadius;
+          const angle = Math.atan2(deltaY, deltaX);
+
+          const moveX = Math.cos(angle) * force * magneticStrength;
+          const moveY = Math.sin(angle) * force * magneticStrength;
+
+          gsap.to(item, {
+            x: moveX,
+            y: moveY,
+            scale: 1.05,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+        } else {
+          gsap.to(item, {
+            x: 0,
+            y: 0,
+            scale: 1,
+            duration: 0.4,
+            ease: "power2.out"
+          });
+        }
+      });
+    };
+
+    container.addEventListener('mousemove', handleMouseMove);
+    return () => container.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    if (isMobile) return;
+
+    const handleContentHover = (e) => {
+      const rect = content.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const rotateX = ((y - centerY) / centerY) * -5;
+      const rotateY = ((x - centerX) / centerX) * 5;
+
+      gsap.to(content, {
+        rotateX: rotateX,
+        rotateY: rotateY,
+        duration: 0.3,
+        ease: "power2.out",
+        transformPerspective: 1000
+      });
+    };
+
+    const handleContentLeave = () => {
+      gsap.to(content, {
+        rotateX: 0,
+        rotateY: 0,
+        duration: 0.4,
+        ease: "power2.out"
+      });
+    };
+
+    content.addEventListener('mousemove', handleContentHover);
+    content.addEventListener('mouseleave', handleContentLeave);
+    return () => {
+      content.removeEventListener('mousemove', handleContentHover);
+      content.removeEventListener('mouseleave', handleContentLeave);
+    };
+  }, []);
+
+  const handleProjectChange = useCallback((newProject) => {
+    if (isTransitioning || selectedProject.id === newProject.id) return;
+
+    setIsTransitioning(true);
+
+    gsap.to(highlightRefs.current.filter(Boolean), {
+      x: -30,
+      opacity: 0,
+      scale: 0.9,
+      duration: 0.2,
+      stagger: 0.03,
+      ease: "power2.in"
+    });
+
+    gsap.to(contentRef.current, {
+      opacity: 0,
+      x: -20,
+      duration: 0.2,
+      ease: "power2.in",
+      onComplete: () => {
+        setSelectedProject(newProject);
+        gsap.fromTo(contentRef.current,
+          { opacity: 0, x: 20 },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.3,
+            ease: "power2.out",
+            onComplete: () => {
+              gsap.fromTo(highlightRefs.current.filter(Boolean),
+                { x: 30, opacity: 0, scale: 0.9 },
+                {
+                  x: 0,
+                  opacity: 1,
+                  scale: 1,
+                  duration: 0.4,
+                  stagger: 0.08,
+                  ease: "back.out(1.2)",
+                  onComplete: () => setIsTransitioning(false)
+                }
+              );
+            }
+          }
+        );
+      }
+    });
+  }, [isTransitioning, selectedProject.id]);
 
   return (
     <div className="interactive-section">
-      <div className="section-sidebar">
-        {projects.map((project) => (
+      <div ref={sidebarContainerRef} className="section-sidebar">
+        {projects.map((project, index) => (
           <button
             key={project.id}
+            ref={(el) => sidebarRefs.current[index] = el}
             className={`sidebar-item ${
               selectedProject.id === project.id ? "active" : ""
             }`}
-            onClick={() => setSelectedProject(project)}
+            onClick={() => handleProjectChange(project)}
           >
             {project.name}
           </button>
         ))}
       </div>
 
-      <div className="section-content-area">
+      <div ref={contentRef} className="section-content-area">
         <h3 className="project-title">{selectedProject.name}</h3>
         <p className="project-tech">{selectedProject.tech}</p>
         <p className="period">{selectedProject.period}</p>
@@ -330,7 +512,7 @@ function ProjectsSection() {
 
         <ul className="highlights-list">
           {selectedProject.highlights.map((highlight, index) => (
-            <li key={index}>{highlight}</li>
+            <li key={index} ref={(el) => highlightRefs.current[index] = el}>{highlight}</li>
           ))}
         </ul>
 
