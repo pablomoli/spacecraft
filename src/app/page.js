@@ -320,11 +320,15 @@ export default function Home() {
       const { normalSectionsHeight, extraSectionHeight, extraSectionStart } =
         heightMeasurements.current;
 
-      // Debug logging (only when entering/exiting sections)
-      // Removed frequent logging to reduce console noise
+      // Debug logging
+      // if (isDev && scrollTop >= extraSectionStart - 100) {
+      //   console.log('[Page.js] Scroll near extra section - scrollTop:', scrollTop, 'extraSectionStart:', extraSectionStart, 'extraSectionHeight:', extraSectionHeight);
+      // }
 
       // Calculate progress for normal sections
-      if (scrollTop < extraSectionStart) {
+      // Use a small threshold to account for smooth scrolling rounding
+      const scrollThreshold = 50;
+      if (scrollTop < extraSectionStart - scrollThreshold) {
         const normalProgress = Math.min(scrollTop / normalSectionsHeight, 1);
         scrollData.scrollProgress.current = normalProgress;
         scrollData.extraScrollProgress.current = 0;
@@ -343,14 +347,22 @@ export default function Home() {
         }
       }
       // Calculate progress for extra section
-      else if (scrollTop >= extraSectionStart && extraSectionHeight > 0) {
+      else if (scrollTop >= extraSectionStart - scrollThreshold && extraSectionHeight > 0) {
         scrollData.scrollProgress.current = 1; // Normal sections complete
 
+        // Calculate progress accounting for the threshold
+        const adjustedScrollInExtra = scrollTop - (extraSectionStart - scrollThreshold);
+        const adjustedExtraHeight = extraSectionHeight + scrollThreshold;
         const extraProgress = Math.min(
-          (scrollTop - extraSectionStart) / extraSectionHeight,
+          adjustedScrollInExtra / adjustedExtraHeight,
           1,
         );
         scrollData.extraScrollProgress.current = extraProgress;
+
+        // Debug logging
+        // if (isDev) {
+        //   console.log('[Page.js] Extra section - scrollTop:', scrollTop, 'extraSectionStart:', extraSectionStart, 'extraProgress:', extraProgress);
+        // }
 
         if (
           scrollData.scrollPhase !== "extra" &&

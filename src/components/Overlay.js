@@ -22,7 +22,8 @@ function GlitchSubtitle() {
   useEffect(() => {
     const tl = gsap.timeline({ repeat: -1 });
 
-      subtitles.forEach((_, index) => {      if (index === 0) {
+    subtitles.forEach((_, index) => {
+      if (index === 0) {
         // First subtitle - fade in
         tl.set([textRef.current, redRef.current, blueRef.current], {
           opacity: 1,
@@ -147,11 +148,11 @@ function getTechIcon(tech) {
     ),
     React: (
       <svg viewBox="-11.5 -10.23174 23 20.46348" fill="none">
-        <circle cx="0" cy="0" r="2.05" fill="#61dafb"/>
+        <circle cx="0" cy="0" r="2.05" fill="#61dafb" />
         <g stroke="#61dafb" strokeWidth="1" fill="none">
-          <ellipse rx="11" ry="4.2"/>
-          <ellipse rx="11" ry="4.2" transform="rotate(60)"/>
-          <ellipse rx="11" ry="4.2" transform="rotate(120)"/>
+          <ellipse rx="11" ry="4.2" />
+          <ellipse rx="11" ry="4.2" transform="rotate(60)" />
+          <ellipse rx="11" ry="4.2" transform="rotate(120)" />
         </g>
       </svg>
     ),
@@ -275,9 +276,8 @@ function ExperienceSection() {
         {experiences.map((exp) => (
           <button
             key={exp.id}
-            className={`sidebar-item ${
-              selectedExperience.id === exp.id ? "active" : ""
-            }`}
+            className={`sidebar-item ${selectedExperience.id === exp.id ? "active" : ""
+              }`}
             onClick={() => setSelectedExperience(exp)}
           >
             {exp.company}
@@ -494,9 +494,8 @@ function ProjectsSection() {
           <button
             key={project.id}
             ref={(el) => sidebarRefs.current[index] = el}
-            className={`sidebar-item ${
-              selectedProject.id === project.id ? "active" : ""
-            }`}
+            className={`sidebar-item ${selectedProject.id === project.id ? "active" : ""
+              }`}
             onClick={() => handleProjectChange(project)}
           >
             {project.name}
@@ -591,27 +590,68 @@ const sections = [
 const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrollContainerRef }, ref) {
   const isAnimatingRef = useRef(false);
   const animationTimeoutRef = useRef(null);
+  const scrollAtBottomTimeoutRef = useRef(null);
+  const hasTriggeredRef = useRef(false);
 
   const triggerWormholeAnimation = useCallback(() => {
+    // console.log('[Overlay] triggerWormholeAnimation called');
     // Prevent overlapping animations
-    if (isAnimatingRef.current) return;
-    
+    if (isAnimatingRef.current) {
+      // console.log('[Overlay] Animation already in progress, returning');
+      return;
+    }
+
     isAnimatingRef.current = true;
-    
+    hasTriggeredRef.current = true;
+
+    // console.log('[Overlay] Stopping Lenis scroll');
     // Stop Lenis scroll during animation
     lenisRef.current?.stop();
-    
+
+    // console.log('[Overlay] Calling scrollData.triggerWormhole()');
     scrollData.triggerWormhole();
-    
+
     // The animation completion and scroll reset is now handled in page.js
     // via the GSAP timeline's onComplete callback
-    
+
     // Reset the animation flag after the animation duration
     animationTimeoutRef.current = setTimeout(() => {
       isAnimatingRef.current = false;
+      hasTriggeredRef.current = false;
       animationTimeoutRef.current = null;
     }, 2600);
   }, [scrollData, lenisRef]);
+
+  // Monitor scroll progress to auto-trigger at 100%
+  useEffect(() => {
+    const checkScrollProgress = () => {
+      const extraProgress = scrollData.extraScrollProgress?.current ?? 0;
+      const scrollPhase = scrollData.scrollPhase;
+
+      // Debug logging
+      // if (extraProgress > 0) {
+      //   console.log('Extra progress:', extraProgress, 'Phase:', scrollPhase, 'Triggered:', hasTriggeredRef.current);
+      // }
+
+      // When user reaches the extra section (even at low progress, since scroll is maxed out)
+      // Trigger at 5% since that's the max we can reach when scrollTop equals max scroll
+      if (extraProgress >= 0.02 && !hasTriggeredRef.current && !isAnimatingRef.current && scrollPhase === 'extra') {
+        // console.log('Triggering wormhole animation at progress:', extraProgress);
+        hasTriggeredRef.current = true;
+        triggerWormholeAnimation();
+      }
+    };
+
+    // Check every frame
+    const intervalId = setInterval(checkScrollProgress, 16);
+
+    return () => {
+      clearInterval(intervalId);
+      if (scrollAtBottomTimeoutRef.current) {
+        clearTimeout(scrollAtBottomTimeoutRef.current);
+      }
+    };
+  }, [scrollData, triggerWormholeAnimation]);
 
   // Add cleanup on unmount
   useEffect(() => {
@@ -620,10 +660,11 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
       }
+      if (scrollAtBottomTimeoutRef.current) {
+        clearTimeout(scrollAtBottomTimeoutRef.current);
+      }
     };
   }, []);
-
-  // Remove scroll-based triggers since we're using a button now
 
   return (
     <div ref={(el) => {
@@ -634,7 +675,7 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
         <div key={section.id} className="section" id={section.id}>
           <div className="dot">
             <h1>
-              <TextPressure 
+              <TextPressure
                 text={section.title}
                 strength={8}
                 radius={80}
@@ -692,66 +733,21 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
           </div>
         </div>
       ))}
-      
-      {/* Extra section with button trigger */}
-      <div className="section extra-section venture-section" style={{ 
-        height: '100vh !important', 
+
+      {/* Extra section - auto-triggers wormhole when user scrolls to bottom */}
+      <div className="section extra-section venture-section" style={{
+        height: '100vh !important',
         minHeight: '100vh !important',
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
         zIndex: 2
       }}>
-        <button 
-          className="venture-button"
-          onClick={triggerWormholeAnimation}
-          disabled={isAnimatingRef.current}
-          style={{
-            fontSize: '2rem',
-            color: 'rgba(255, 255, 255, 0.9)',
-            background: 'transparent',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '50px',
-            padding: '1rem 3rem',
-            cursor: isAnimatingRef.current ? 'not-allowed' : 'pointer',
-            opacity: isAnimatingRef.current ? 0.5 : 1,
-            transition: 'all 0.3s ease',
-            fontFamily: 'inherit',
-            backdropFilter: 'blur(10px)',
-            position: 'relative',
-            overflow: 'hidden',
-            zIndex: 10,
-            pointerEvents: 'auto'
-          }}
-          onMouseEnter={(e) => {
-            if (!isAnimatingRef.current) {
-              gsap.to(e.target, {
-                borderColor: 'rgba(100, 181, 246, 0.8)',
-                scale: 1.05,
-                boxShadow: '0 0 30px rgba(100, 181, 246, 0.5)',
-                duration: 0.3,
-                ease: 'power2.out'
-              });
-            }
-          }}
-          onMouseLeave={(e) => {
-            gsap.to(e.target, {
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              scale: 1,
-              boxShadow: 'none',
-              duration: 0.3,
-              ease: 'power2.out'
-            });
-          }}
-        >
-          Venture beyond the known
-        </button>
       </div>
     </div>
   );
 });
 
 export default Overlay;
-

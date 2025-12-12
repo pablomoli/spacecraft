@@ -41,6 +41,7 @@ export function useScroll() {
   };
 
   const triggerWormhole = () => {
+    // console.log('[useScroll] triggerWormhole called - setting phase to wormhole');
     setWormholeTriggered(true);
     setScrollPhase('wormhole');
   };
