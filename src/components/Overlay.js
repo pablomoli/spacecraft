@@ -1,4 +1,4 @@
-import React, { forwardRef, useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { gsap } from "gsap";
 import TextPressure from "./TextPressure";
 
@@ -193,12 +193,26 @@ const experiences = [
   {
     id: "university",
     company: "University of Central Florida",
-    role: "Computer Science Student",
-    period: "AUG 2023 - PRESENT",
+    role: "B.S. Computer Science, Math Minor",
+    period: "AUG 2023 - SPRING 2026",
     highlights: [
-      "Studying algorithms, data structures, and software engineering fundamentals",
-      "Maintaining strong academic performance while gaining real-world experience",
-      "Participating in hackathons and coding competitions",
+      "Senior with a 3.5 GPA, consistently on the Dean's List",
+      "Coursework in Data Structures & Algorithms, Security in Computing, Computer Logic & Organization, and Discrete Structures",
+      "Math minor spanning Calculus I-III, Linear Algebra, Differential Equations, and Mathematical Modeling",
+      "Active member of Knight Hacks, UCF's competitive hackathon organization",
+    ],
+  },
+
+  {
+    id: "oneethos",
+    company: "OneEthos",
+    role: "Research & Development Intern",
+    period: "AUG 2025 - DEC 2025",
+    highlights: [
+      "Architected a fraud detection pipeline in Flask with a dashboard to track run history, using a model ensemble to score temporal transaction data",
+      "Built a URL shortening service with Next.js and MongoDB to provide marketing with campaign-level click tracking and analytics",
+      "Developed and delivered core application features for Green Bank partners across the full stack",
+      "Owned end-to-end delivery of internal tools from requirements gathering through deployment in a fast-paced startup environment",
     ],
   },
 
@@ -216,13 +230,83 @@ const experiences = [
   },
 ];
 
-// Add this data structure for projects
+const hackathons = [
+  {
+    id: "crisis-averted",
+    name: "Crisis Averted",
+    award: "3rd Best Overall",
+    event: "Hacklytics 2026, Georgia Tech",
+    period: "FEB 2026",
+    tech: "Databricks, Delta Lake, Google Gemini, ElevenLabs",
+    image: "/images/crisis-averted.webp",
+    description:
+      "Built a 3D geospatial intelligence platform visualizing humanitarian funding gaps on an interactive globe. Engineered data pipelines with Databricks and Delta Lake, and integrated an AI voice agent using Google Gemini and ElevenLabs for natural language crisis exploration.",
+  },
+  {
+    id: "helios-ai",
+    name: "Helios AI",
+    award: "Best Use of ARM",
+    event: "Knight Hacks VIII, UCF",
+    period: "NOV 2025",
+    tech: "Arduino, Google ADK, React, IoT",
+    image: "/images/helios-ai.webp",
+    description:
+      "Built an IoT-powered educational platform using Arduinos, servos, and solar cells to demonstrate renewable energy. Developed a real-time dashboard visualizing KPIs and integrated Google ADK for voice interaction.",
+  },
+];
+
 const projects = [
   {
-    id: "project1",
+    id: "atlas",
+    name: "Atlas",
+    tech: "Leaflet.js, JavaScript, HTML/CSS",
+    period: "JUN 2025 - PRESENT",
+    image: "/images/epicmap-webapp.webp",
+    description:
+      "Mobile-first field service frontend for real-time data access across 1,000+ job sites in 5 Florida counties",
+    highlights: [
+      "Developed a mobile-first Leaflet.js map interface for real-time field data access across 1,000+ job sites in 5 Florida counties",
+      "Architected a modular frontend with 61 JavaScript modules organized by feature domain (map, admin, route planner)",
+      "Built a route planning system with GPS integration, stop management, and visualization for field crews",
+    ],
+    links: {
+      link: "https://www.linkedin.com/posts/pablo-molina-ro_took-some-time-off-from-designing-my-own-activity-7332954345124069376-gUdu?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAADmSf2MBODRgI29MSI00ULMirsuoP2iKSUk",
+    },
+  },
+  {
+    id: "meridian",
+    name: "Meridian",
+    tech: "Flask, PostgreSQL, PostGIS, REST API",
+    period: "JUN 2025 - PRESENT",
+    image: "/images/epicmap-api.webp",
+    description:
+      "Backend services powering the EpicMap platform with 50+ endpoints spanning geocoding, job management, and geospatial queries",
+    highlights: [
+      "Architected a Flask REST API with 50+ endpoints spanning geocoding, job management, crew scheduling, and mileage tracking",
+      "Integrated county ArcGIS REST services, Google Maps, and FEMA flood zone APIs for multi-county parcel geocoding",
+      "Built PostGIS-powered geospatial queries for location-based filtering and parcel boundary analysis",
+    ],
+  },
+  {
+    id: "vault",
+    name: "Vault",
+    tech: "Synology NAS, S3, Docker",
+    period: "JUN 2025 - PRESENT",
+    image: "/images/epicmap-storage.webp",
+    description:
+      "Self-hosted document infrastructure for the EpicMap platform with S3-compatible storage and health monitoring",
+    highlights: [
+      "Deployed self-hosted document storage on Synology NAS using Garage with boto3 over the S3 protocol",
+      "Integrated file management into the API for field team document uploads and retrieval",
+      "Built health monitoring for NAS connectivity on the platform's status page",
+    ],
+  },
+  {
+    id: "space-portfolio",
     name: "Space Portfolio",
     tech: "React, Three.js, R3F, Blender",
     period: "JUN 2025",
+    image: "/images/space-portfolio.webp",
     description:
       "Interactive 3D portfolio website featuring immersive space exploration with scroll-driven animations and responsive design",
     highlights: [
@@ -231,40 +315,45 @@ const projects = [
       "Achieved 60fps performance through texture compression and asset optimization",
     ],
   },
-  {
-    id: "project2",
-    name: "Epic Map",
-    tech: "Flask, Python, JavaScript, PostGIS, Leaflet",
-    period: "MAY 2025",
-    description:
-      "Enterprise surveying job management platform with real-time mapping, advanced search, and workflow automation",
-    highlights: [
-      "Manages 1000+ surveying jobs across 5 Central Florida counties with enterprise-grade architecture",
-      "Reduced job lookup time by 75% through intelligent fuzzy search and real-time filtering",
-      "Built interactive mapping with marker clustering, multi-selection, and Google Maps integration",
-      "Designed fieldwork tracking with automated time calculation and soft-deletion recovery",
-    ],
-    links: {
-      link: "https://www.linkedin.com/posts/pablo-molina-ro_took-some-time-off-from-designing-my-own-activity-7332954345124069376-gUdu?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAADmSf2MBODRgI29MSI00ULMirsuoP2iKSUk",
-    },
-  },
-  // {
-  //   id: "project3",
-  //   name: "Weather Dashboard",
-  //   tech: "React, TypeScript, Chart.js",
-  //   period: "AUG 2024",
-  //   description: "Weather visualization dashboard with interactive charts",
-  //   highlights: [
-  //     "Integrated multiple weather APIs for comprehensive data",
-  //     "Built interactive charts showing weather trends",
-  //     "Implemented location-based weather forecasting",
-  //   ],
-  //   links: {
-  //     github: "https://github.com/yourusername/weather-dashboard",
-  //     live: "https://weather-dash.com",
-  //   },
-  // },
 ];
+
+function HackathonSection() {
+  const [selected, setSelected] = useState(hackathons[0]);
+
+  return (
+    <div className="interactive-section">
+      <div className="section-sidebar">
+        {hackathons.map((hack) => (
+          <button
+            key={hack.id}
+            className={`sidebar-item ${selected.id === hack.id ? "active" : ""}`}
+            onClick={() => setSelected(hack)}
+          >
+            {hack.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="section-content-area">
+        {selected.image && (
+          <div className="hackathon-image-container">
+            <img
+              src={selected.image}
+              alt={selected.name}
+              className="hackathon-image"
+            />
+          </div>
+        )}
+        <p className="hackathon-award">{selected.award}</p>
+        <h3 className="project-title">{selected.name}</h3>
+        <p className="hackathon-event">{selected.event}</p>
+        <p className="project-tech">{selected.tech}</p>
+        <p className="period">{selected.period}</p>
+        <p className="project-description">{selected.description}</p>
+      </div>
+    </div>
+  );
+}
 
 // Interactive Experience Component
 function ExperienceSection() {
@@ -286,6 +375,15 @@ function ExperienceSection() {
       </div>
 
       <div className="section-content-area">
+        {selectedExperience.image && (
+          <div className="project-image-container">
+            <img
+              src={selectedExperience.image}
+              alt={selectedExperience.company}
+              className="project-image"
+            />
+          </div>
+        )}
         <h3 className="role-title">
           {selectedExperience.role}
           <br />
@@ -504,9 +602,25 @@ function ProjectsSection() {
       </div>
 
       <div ref={contentRef} className="section-content-area">
-        <h3 className="project-title">{selectedProject.name}</h3>
-        <p className="project-tech">{selectedProject.tech}</p>
-        <p className="period">{selectedProject.period}</p>
+        <div className="project-header-row">
+          {selectedProject.image && (
+            <div className="project-image-container">
+              <img
+                src={selectedProject.image}
+                alt={selectedProject.name}
+                className="project-image"
+              />
+            </div>
+          )}
+          <div className="project-header-text">
+            <h3 className="project-title">{selectedProject.name}</h3>
+            {selectedProject.badge && (
+              <p className="project-badge">{selectedProject.badge}</p>
+            )}
+            <p className="project-tech">{selectedProject.tech}</p>
+            <p className="period">{selectedProject.period}</p>
+          </div>
+        </div>
         <p className="project-description">{selectedProject.description}</p>
 
         <ul className="highlights-list">
@@ -514,27 +628,27 @@ function ProjectsSection() {
             <li key={index} ref={(el) => highlightRefs.current[index] = el}>{highlight}</li>
           ))}
         </ul>
+      </div>
 
-        <div className="project-links">
-          {selectedProject.links && selectedProject.links.github && (
-            <a
-              href={selectedProject.links?.github}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-          )}
-          {selectedProject.links && selectedProject.links.link && (
-            <a
-              href={selectedProject.links?.link}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Link
-            </a>
-          )}
-        </div>
+      <div className="project-links">
+        {selectedProject.links && selectedProject.links.github && (
+          <a
+            href={selectedProject.links?.github}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+        )}
+        {selectedProject.links && selectedProject.links.link && (
+          <a
+            href={selectedProject.links?.link}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Link
+          </a>
+        )}
       </div>
     </div>
   );
@@ -578,6 +692,12 @@ const sections = [
     description: "Discoveries from across the digital universe",
   },
   {
+    id: "hackathons",
+    title: "Hackathons",
+    subtitle: "Competition Wins",
+    description: "",
+  },
+  {
     id: "contact",
     title: "Contact Me",
     subtitle: "Let's establish contact",
@@ -587,7 +707,7 @@ const sections = [
   },
 ];
 
-const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrollContainerRef }, ref) {
+function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
   const isAnimatingRef = useRef(false);
   const animationTimeoutRef = useRef(null);
   const scrollAtBottomTimeoutRef = useRef(null);
@@ -701,6 +821,7 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
             {/* Conditional rendering for interactive sections */}
             {section.id === "about" && <ExperienceSection />}
             {section.id === "projects" && <ProjectsSection />}
+            {section.id === "hackathons" && <HackathonSection />}
             {/* Tech skills */}
             {section.techs && (
               <div className="tech-grid">
@@ -748,6 +869,6 @@ const Overlay = forwardRef(function Overlay({ scrollData, style, lenisRef, scrol
       </div>
     </div>
   );
-});
+}
 
 export default Overlay;

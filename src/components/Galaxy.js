@@ -1,5 +1,5 @@
 import { Renderer, Program, Mesh, Color, Triangle } from "ogl";
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useRef, useImperativeHandle } from "react";
 import { WORMHOLE_TRANSITION_SETTINGS } from "./galaxyConfig";
 import "./Galaxy.css";
 
@@ -192,7 +192,7 @@ void main() {
 }
 `;
 
-const Galaxy = forwardRef(function Galaxy({
+function Galaxy({
   focal = [0.5, 0.5],
   rotation = [1.0, 0.0],
   starSpeed = 0.5,
@@ -210,8 +210,9 @@ const Galaxy = forwardRef(function Galaxy({
   autoCenterRepulsion = 0,
   transparent = true,
   quality = 'high', // 'low' = 2 layers, 'medium' = 3 layers, 'high' = 4 layers
+  ref,
   ...rest
-}, ref) {
+}) {
   const ctnDom = useRef(null);
   const targetMousePos = useRef({ x: 0.5, y: 0.5 });
   const smoothMousePos = useRef({ x: 0.5, y: 0.5 });
@@ -315,6 +316,7 @@ const Galaxy = forwardRef(function Galaxy({
     const renderer = new Renderer({
       alpha: transparent,
       premultipliedAlpha: false,
+      powerPreference: "high-performance",
     });
     const gl = renderer.gl;
 
@@ -522,6 +524,6 @@ const Galaxy = forwardRef(function Galaxy({
   ]);
 
   return <div ref={ctnDom} className="galaxy-container" {...rest} />;
-});
+}
 
 export default Galaxy;

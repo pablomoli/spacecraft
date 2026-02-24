@@ -110,7 +110,11 @@ export default function Earth() {
     };
 
     idle(loadHighRes);
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      // Dispose high-res textures to free GPU memory
+      [earthMapHigh, lightsMapHigh, cloudsMapHigh].forEach(tex => tex?.dispose());
+    };
   }, []);
 
   // Use high-res if loaded, otherwise low-res
@@ -128,14 +132,12 @@ export default function Earth() {
     }
   });
 
-  const fresnelUniforms = {
-    color: { value: new THREE.Color(0x00aaff) },
-    intensity: { value: 0.3 },
-    power: { value: 1.0 },
-  };
-
-  const fresnelMaterial = new THREE.ShaderMaterial({
-    uniforms: fresnelUniforms,
+  const fresnelMaterial = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      color: { value: new THREE.Color(0x00aaff) },
+      intensity: { value: 0.3 },
+      power: { value: 1.0 },
+    },
     vertexShader: `
       varying vec3 vNormal;
       varying vec3 vViewDir;
@@ -162,7 +164,7 @@ export default function Earth() {
     transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-  });
+  }), []);
 
   return (
     <group ref={groupRef}>

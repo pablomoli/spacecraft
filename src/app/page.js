@@ -333,13 +333,13 @@ export default function Home() {
         scrollData.scrollProgress.current = normalProgress;
         scrollData.extraScrollProgress.current = 0;
 
-        // Calculate section index more efficiently
-        // Assuming 5 sections before extra section, each 200vh
+        // Calculate section index based on scroll position
         const sectionHeight = window.innerHeight * 2; // 200vh per section
+        const numSections = 6; // hero, about, technologies, projects, hackathons, contact
         const currentSectionIndex = Math.min(
           Math.floor(scrollTop / sectionHeight),
-          4,
-        ); // 0-4 for 5 sections
+          numSections - 1,
+        );
         scrollData.handleSectionChange(currentSectionIndex);
 
         if (scrollData.scrollPhase !== "normal") {

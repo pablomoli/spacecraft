@@ -71,6 +71,11 @@ function SceneContent({
 
       <Canvas
         className="canvas"
+        dpr={[1, 1.5]}
+        gl={{
+          powerPreference: "high-performance",
+          antialias: false,
+        }}
         style={{
           opacity: showUI ? 1 : 0,
           transition: "opacity 0.2s ease",

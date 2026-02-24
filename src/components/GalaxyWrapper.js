@@ -1,12 +1,9 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import { useImperativeHandle, useRef } from 'react';
 import Galaxy from './Galaxy';
 import { DEFAULT_GALAXY_SETTINGS } from './galaxyConfig';
 
 // Simple wrapper that forwards ref to Galaxy for direct uniform updates
-const GalaxyWrapper = forwardRef(function GalaxyWrapper({
-  config,
-  ...props
-}, ref) {
+function GalaxyWrapper({ config, ref, ...props }) {
   const galaxyRef = useRef(null);
 
   // Forward the Galaxy's updateUniforms method
@@ -32,6 +29,6 @@ const GalaxyWrapper = forwardRef(function GalaxyWrapper({
       transparent={true}
     />
   );
-});
+}
 
 export default GalaxyWrapper;

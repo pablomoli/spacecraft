@@ -267,8 +267,7 @@ function MagneticSocialLinks() {
           height: 44px;
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 50%;
-          background: rgba(0, 0, 0, 0.3);
-          backdrop-filter: blur(10px);
+          background: rgba(0, 0, 0, 0.5);
           color: rgba(255, 255, 255, 0.7);
           cursor: pointer;
           transition: all 0.3s ease;
