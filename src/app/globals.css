@@ -96,6 +96,10 @@
     border-bottom-color: #64b5f6 !important;
   }
 
+  .section-content-wrapper {
+    padding-left: 0 !important;
+  }
+
   .section-content-area {
     padding: 0 !important;
     width: 100% !important;
@@ -220,13 +224,6 @@
     height: 120px !important;
   }
 
-  .hackathon-image-container {
-    max-height: 150px !important;
-  }
-
-  .hackathon-image {
-    height: 150px !important;
-  }
 }
 
 /* Large Mobile/Small Tablet */
@@ -320,18 +317,12 @@ body::before {
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  scroll-snap-type: y proximity;
   z-index: 1;
   pointer-events: auto;
 }
 
-.scroll > div:not(.extra-section) {
-  scroll-snap-align: start;
-}
-
 /* Ensure extra section is scrollable */
 .extra-section {
-  scroll-snap-align: none !important;
   height: 200vh !important;
   min-height: 200vh !important;
 }
@@ -887,9 +878,15 @@ body::before {
   background: rgba(100, 181, 246, 0.15);
 }
 
-.section-content-area {
+.section-content-wrapper {
   flex: 1;
   padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-content-area {
+  flex: 1;
 }
 
 .role-title {
@@ -949,23 +946,6 @@ body::before {
   border-radius: 20px;
   margin-bottom: 0.8rem;
   letter-spacing: 0.3px;
-}
-
-/* Hackathon Section */
-.hackathon-image-container {
-  width: 100%;
-  max-height: 200px;
-  overflow: hidden;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(100, 181, 246, 0.15);
-}
-
-.hackathon-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  display: block;
 }
 
 .hackathon-award {
@@ -1059,7 +1039,12 @@ body::before {
 .project-links {
   display: flex;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
+  justify-content: flex-end;
+}
+
+.hackathon-header-row {
+  flex-direction: row;
 }
 
 .project-links a {
