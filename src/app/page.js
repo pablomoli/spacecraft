@@ -226,6 +226,7 @@ export default function Home() {
     normalSectionsHeight: 0,
     extraSectionHeight: 0,
     extraSectionStart: 0,
+    sectionOffsets: [],
     isInitialized: false,
   });
 
@@ -251,6 +252,14 @@ export default function Home() {
       actualNormalSectionsHeight += height;
     });
 
+    // Build cumulative section offsets for snap targets
+    const offsets = [];
+    let cumulativeOffset = 0;
+    sectionHeights.forEach(({ height }) => {
+      offsets.push(cumulativeOffset);
+      cumulativeOffset += height;
+    });
+
     const extraSectionHeight = extraSection ? extraSection.offsetHeight : 0;
     const extraSectionStart = actualNormalSectionsHeight;
 
@@ -259,6 +268,7 @@ export default function Home() {
       normalSectionsHeight: actualNormalSectionsHeight,
       extraSectionHeight,
       extraSectionStart,
+      sectionOffsets: offsets,
       isInitialized: true,
     };
 
