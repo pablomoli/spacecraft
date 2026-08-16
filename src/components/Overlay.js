@@ -335,20 +335,24 @@ function HackathonSection() {
       </div>
 
       <div className="section-content-area">
-        {selected.image && (
-          <div className="hackathon-image-container">
-            <img
-              src={selected.image}
-              alt={selected.name}
-              className="hackathon-image"
-            />
+        <div className="project-header-row hackathon-header-row">
+          <div className="project-header-text">
+            <p className="hackathon-award">{selected.award}</p>
+            <h3 className="project-title">{selected.name}</h3>
+            <p className="hackathon-event">{selected.event}</p>
+            <p className="project-tech">{selected.tech}</p>
+            <p className="period">{selected.period}</p>
           </div>
-        )}
-        <p className="hackathon-award">{selected.award}</p>
-        <h3 className="project-title">{selected.name}</h3>
-        <p className="hackathon-event">{selected.event}</p>
-        <p className="project-tech">{selected.tech}</p>
-        <p className="period">{selected.period}</p>
+          {selected.image && (
+            <div className="project-image-container">
+              <img
+                src={selected.image}
+                alt={selected.name}
+                className="project-image"
+              />
+            </div>
+          )}
+        </div>
         <p className="project-description">{selected.description}</p>
       </div>
     </div>
@@ -601,54 +605,56 @@ function ProjectsSection() {
         ))}
       </div>
 
-      <div ref={contentRef} className="section-content-area">
-        <div className="project-header-row">
-          {selectedProject.image && (
-            <div className="project-image-container">
-              <img
-                src={selectedProject.image}
-                alt={selectedProject.name}
-                className="project-image"
-              />
-            </div>
-          )}
-          <div className="project-header-text">
-            <h3 className="project-title">{selectedProject.name}</h3>
-            {selectedProject.badge && (
-              <p className="project-badge">{selectedProject.badge}</p>
+      <div className="section-content-wrapper">
+        <div ref={contentRef} className="section-content-area">
+          <div className="project-header-row">
+            {selectedProject.image && (
+              <div className="project-image-container">
+                <img
+                  src={selectedProject.image}
+                  alt={selectedProject.name}
+                  className="project-image"
+                />
+              </div>
             )}
-            <p className="project-tech">{selectedProject.tech}</p>
-            <p className="period">{selectedProject.period}</p>
+            <div className="project-header-text">
+              <h3 className="project-title">{selectedProject.name}</h3>
+              {selectedProject.badge && (
+                <p className="project-badge">{selectedProject.badge}</p>
+              )}
+              <p className="project-tech">{selectedProject.tech}</p>
+              <p className="period">{selectedProject.period}</p>
+            </div>
           </div>
+          <p className="project-description">{selectedProject.description}</p>
+
+          <ul className="highlights-list">
+            {selectedProject.highlights.map((highlight, index) => (
+              <li key={index} ref={(el) => highlightRefs.current[index] = el}>{highlight}</li>
+            ))}
+          </ul>
         </div>
-        <p className="project-description">{selectedProject.description}</p>
 
-        <ul className="highlights-list">
-          {selectedProject.highlights.map((highlight, index) => (
-            <li key={index} ref={(el) => highlightRefs.current[index] = el}>{highlight}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="project-links">
-        {selectedProject.links && selectedProject.links.github && (
-          <a
-            href={selectedProject.links?.github}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub
-          </a>
-        )}
-        {selectedProject.links && selectedProject.links.link && (
-          <a
-            href={selectedProject.links?.link}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Link
-          </a>
-        )}
+        <div className="project-links">
+          {selectedProject.links && selectedProject.links.github && (
+            <a
+              href={selectedProject.links?.github}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+          )}
+          {selectedProject.links && selectedProject.links.link && (
+            <a
+              href={selectedProject.links?.link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Link
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

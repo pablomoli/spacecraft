@@ -180,7 +180,6 @@ const galaxyConfigReducer = (state, action) => {
 
 // Snap thresholds (hoisted outside component to avoid re-creation per render)
 const SNAP_VELOCITY_THRESHOLD = 0.5;
-const SKIP_VELOCITY_THRESHOLD = 3.0;
 const SNAP_DEBOUNCE_MS = 100;
 
 export default function Home() {
@@ -320,10 +319,9 @@ export default function Home() {
   // Snap state refs
   const snapTimeoutRef = useRef(null);
   const isSnappingRef = useRef(false);
-  const peakVelocityRef = useRef(0);
 
   // Snap to nearest section when scroll velocity drops
-  const snapToSection = useCallback((scrollTop, velocity) => {
+  const snapToSection = useCallback((scrollTop) => {
     if (isSnappingRef.current) return;
     if (!heightMeasurements.current.isInitialized) return;
 
@@ -344,19 +342,7 @@ export default function Home() {
       }
     }
 
-    // Determine scroll direction from velocity sign
-    const direction = velocity > 0 ? 1 : -1;
-
-    // If peak velocity exceeded skip threshold, target next section in direction
-    let targetIndex = nearestIndex;
-    if (Math.abs(peakVelocityRef.current) > SKIP_VELOCITY_THRESHOLD) {
-      const skipTarget = nearestIndex + direction;
-      if (skipTarget >= 0 && skipTarget < sectionOffsets.length) {
-        targetIndex = skipTarget;
-      }
-    }
-
-    const targetOffset = sectionOffsets[targetIndex];
+    const targetOffset = sectionOffsets[nearestIndex];
 
     // Only snap if we are not already very close to the target
     if (Math.abs(scrollTop - targetOffset) < 5) return;
@@ -364,11 +350,10 @@ export default function Home() {
     isSnappingRef.current = true;
 
     lenisRef.current?.scrollTo(targetOffset, {
-      duration: 1.4,
+      duration: 2.0,
       easing: (t) => 1 - Math.pow(1 - t, 4),
       onComplete: () => {
         isSnappingRef.current = false;
-        peakVelocityRef.current = 0;
       },
     });
   }, []);
@@ -383,26 +368,25 @@ export default function Home() {
       }, 16);
       const scrollTop = e.scroll;
 
-      // Track peak velocity for snap logic
-      const velocity = e.velocity || 0;
-      if (Math.abs(velocity) > Math.abs(peakVelocityRef.current)) {
-        peakVelocityRef.current = velocity;
-      }
+      // Skip snap detection while a snap animation is in progress
+      // (Lenis emits scroll events during scrollTo, which would cascade)
+      if (!isSnappingRef.current) {
+        const velocity = e.velocity || 0;
 
-      // Snap detection: when velocity drops below threshold, trigger snap
-      if (Math.abs(velocity) < SNAP_VELOCITY_THRESHOLD && Math.abs(velocity) > 0.01) {
-        if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
-        snapTimeoutRef.current = setTimeout(() => {
-          const currentScroll = lenisRef.current?.scroll ?? scrollTop;
-          snapToSection(currentScroll, velocity);
-        }, SNAP_DEBOUNCE_MS);
-      } else if (Math.abs(velocity) >= SNAP_VELOCITY_THRESHOLD) {
-        // User is actively scrolling, cancel any pending snap
-        if (snapTimeoutRef.current) {
-          clearTimeout(snapTimeoutRef.current);
-          snapTimeoutRef.current = null;
+        // Snap detection: when velocity drops below threshold, trigger snap
+        if (Math.abs(velocity) < SNAP_VELOCITY_THRESHOLD && Math.abs(velocity) > 0.01) {
+          if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
+          snapTimeoutRef.current = setTimeout(() => {
+            const currentScroll = lenisRef.current?.scroll ?? scrollTop;
+            snapToSection(currentScroll);
+          }, SNAP_DEBOUNCE_MS);
+        } else if (Math.abs(velocity) >= SNAP_VELOCITY_THRESHOLD) {
+          // User is actively scrolling, cancel any pending snap
+          if (snapTimeoutRef.current) {
+            clearTimeout(snapTimeoutRef.current);
+            snapTimeoutRef.current = null;
+          }
         }
-        isSnappingRef.current = false;
       }
 
       // Ensure heights are measured
