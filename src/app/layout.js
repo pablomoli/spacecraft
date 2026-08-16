@@ -1,11 +1,21 @@
-import { Space_Grotesk } from 'next/font/google'
+import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'] })
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-grotesk',
+})
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
+})
 
 export const metadata = {
-  title: 'Pablo Molina - Space Portfolio',
-  description: 'Interactive 3D portfolio showcasing my journey through technology and space exploration',
+  title: 'Pablo Molina',
+  description:
+    'Software engineer. Interactive 3D portfolio and a measured experiment record: embeddings, retrieval evals, interpretability.',
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -23,7 +33,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={spaceGrotesk.className}>{children}</body>
+      <body className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} ${spaceGrotesk.className}`}>
+        {children}
+      </body>
     </html>
   )
 }

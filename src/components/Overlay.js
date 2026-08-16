@@ -349,6 +349,7 @@ function HackathonSection() {
                 src={selected.image}
                 alt={selected.name}
                 className="project-image"
+                onError={(e) => { e.currentTarget.closest(".project-image-container").style.display = "none"; }}
               />
             </div>
           )}
@@ -385,6 +386,7 @@ function ExperienceSection() {
               src={selectedExperience.image}
               alt={selectedExperience.company}
               className="project-image"
+              onError={(e) => { e.currentTarget.closest(".project-image-container").style.display = "none"; }}
             />
           </div>
         )}
@@ -614,6 +616,7 @@ function ProjectsSection() {
                   src={selectedProject.image}
                   alt={selectedProject.name}
                   className="project-image"
+                  onError={(e) => { e.currentTarget.closest(".project-image-container").style.display = "none"; }}
                 />
               </div>
             )}
@@ -797,33 +800,9 @@ function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
       if (ref) ref.current = el;
       if (scrollContainerRef) scrollContainerRef.current = el;
     }} className="scroll" style={style}>
-      {sections.map((section) => (
-        <div key={section.id} className="section" id={section.id}>
-          <div className="dot">
-            <h1>
-              <TextPressure
-                text={section.title}
-                strength={8}
-                radius={80}
-                width={true}
-                weight={true}
-                widthRange={[0.7, 1.3]}
-                weightRange={[200, 900]}
-                style={{
-                  fontSize: 'inherit',
-                  fontWeight: 'inherit',
-                  color: 'inherit',
-                  fontFamily: 'inherit'
-                }}
-              />
-            </h1>
-            {/* Conditional subtitle rendering */}
-            {section.id === "hero" ? (
-              <GlitchSubtitle />
-            ) : (
-              section.subtitle && <p className="subtitle">{section.subtitle}</p>
-            )}
-            <p className="description">{section.description}</p>
+      {sections.map((section, sectionIndex) => {
+        const sectionBody = (
+          <>
             {/* Conditional rendering for interactive sections */}
             {section.id === "about" && <ExperienceSection />}
             {section.id === "projects" && <ProjectsSection />}
@@ -857,9 +836,53 @@ function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
                 </div>
               </div>
             )}
+          </>
+        );
+
+        const title = (
+          <h1>
+            <TextPressure
+              text={section.title}
+              strength={8}
+              radius={80}
+              width={true}
+              weight={true}
+              widthRange={[0.7, 1.3]}
+              weightRange={[200, 900]}
+              style={{
+                fontSize: 'inherit',
+                fontWeight: 'inherit',
+                color: 'inherit',
+                fontFamily: 'inherit'
+              }}
+            />
+          </h1>
+        );
+
+        return (
+          <div key={section.id} className="section" id={section.id}>
+            <div className="dot">
+              {section.id === "hero" ? (
+                <>
+                  {title}
+                  <GlitchSubtitle />
+                  <p className="description">{section.description}</p>
+                </>
+              ) : (
+                <div className="section-panel">
+                  <p className="panel-kicker">
+                    {String(sectionIndex).padStart(2, "0")} / {section.id.toUpperCase()}
+                  </p>
+                  {title}
+                  {section.subtitle && <p className="subtitle">{section.subtitle}</p>}
+                  {section.description && <p className="description">{section.description}</p>}
+                  {sectionBody}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Extra section - auto-triggers wormhole when user scrolls to bottom */}
       <div className="section extra-section venture-section" style={{

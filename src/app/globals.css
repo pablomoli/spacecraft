@@ -1141,3 +1141,189 @@ body::before {
   height: 100%;
   z-index: -1;
 }
+
+/* ================================================================
+   Journey upgrade: design tokens + panel system
+   (docs/plans/2026-08-16-journey-upgrade-design.md)
+   ================================================================ */
+
+:root {
+  --bg: #08080a;
+  --panel-surface: rgba(8, 8, 10, 0.72);
+  --frame: #2e2e36;
+  --text: #eceae7;
+  --muted: #9a968f;
+  --accent: #64b5f6;      /* journey UI accent (existing site blue) */
+  --cyan: #7fd4ff;
+  --gold: #f2b950;        /* reserved: the experiment record only */
+  --font-mono-stack: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --ease-quick: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --t-micro: 200ms;       /* motion budget: micro-interactions 150-250ms */
+}
+
+/* Panel: one surface for all journey text. Text never sits raw on the
+   scene; the fixed min-heights are what kill layout shift on tab swaps. */
+.section-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-surface);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--frame);
+  padding: 2rem 2.25rem;
+  max-width: 700px;
+  width: 100%;
+  max-height: calc(100vh - 7rem);
+  margin: 0 clamp(16px, 3vw, 56px);
+  text-align: left;
+  pointer-events: auto;
+}
+
+/* Single instrument detail: accent tick on the top-left corner */
+.section-panel::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 36px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.section-panel.record-panel::before {
+  background: var(--gold);
+}
+
+.panel-kicker {
+  font-family: var(--font-mono-stack);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.1rem;
+}
+
+.record-panel .panel-kicker {
+  color: var(--gold);
+}
+
+.section-panel .panel-title,
+.section-panel h1 {
+  color: var(--text);
+  font-size: 2.2em;
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.35em 0;
+  text-shadow: none;
+}
+
+.section-panel .subtitle {
+  font-family: var(--font-mono-stack);
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-shadow: none;
+  margin-bottom: 1.2em;
+}
+
+.section-panel .description {
+  color: var(--text);
+  opacity: 0.85;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 60ch;
+  margin-bottom: 1rem;
+}
+
+/* Interactive area inside a panel: fixed height so tab swaps never
+   resize anything; the content column scrolls internally instead. */
+.section-panel .interactive-section {
+  margin-top: 0.5rem;
+  max-width: none;
+  height: 400px;
+  min-height: 0;
+  flex: 0 1 auto;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.section-panel .section-sidebar {
+  min-width: 168px;
+}
+
+.section-panel .section-content-wrapper {
+  min-height: 0;
+}
+
+.section-panel .section-content-area {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--frame) transparent;
+}
+
+.section-panel .sidebar-item {
+  font-size: 0.9rem;
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.25rem;
+  transition: color var(--t-micro) var(--ease-quick),
+    border-color var(--t-micro) var(--ease-quick),
+    background var(--t-micro) var(--ease-quick);
+}
+
+.section-panel .highlights-list {
+  text-align: left;
+}
+
+.section-panel .period {
+  font-family: var(--font-mono-stack);
+  letter-spacing: 0.08em;
+}
+
+/* Split contract: panel hugs its declared side, scene owns the rest.
+   Odd/even alignment comes from the existing .section rules; these
+   margins stop the panel from drifting into the scene's zone. */
+.section:nth-child(odd) .dot {
+  align-items: flex-start;
+}
+
+.section:nth-child(even) .dot {
+  align-items: flex-end;
+}
+
+.section:nth-child(even) .dot .section-panel {
+  text-align: left;
+}
+
+.section:first-child .dot {
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .section-panel {
+    max-width: 100%;
+    padding: 1.75rem 1.5rem;
+  }
+
+  .section-panel .interactive-section {
+    height: auto;
+    max-height: 60vh;
+    flex-direction: column;
+  }
+
+  .section-panel .panel-title,
+  .section-panel h1 {
+    font-size: 2em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-panel .sidebar-item {
+    transition: none;
+  }
+}
