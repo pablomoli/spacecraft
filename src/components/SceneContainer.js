@@ -44,6 +44,9 @@ function SceneContent({
 }) {
   const searchParams = useSearchParams();
   const isLiteMode = searchParams.get("lite") === "1";
+  // Bloom measurably amplifies frame-to-frame shimmer on the rotating
+  // surface (frame-diff 8.5 vs 5.2 without); opt-in until that's solved
+  const bloomOptIn = searchParams.get("bloom") === "1";
   // Bloom only where it's cheap enough: desktop-class viewport + retina
   const [bloomEnabled, setBloomEnabled] = useState(false);
   useEffect(() => {
@@ -94,14 +97,14 @@ function SceneContent({
             extraScrollProgress={scrollData.extraScrollProgress}
             scrollPhase={scrollData.scrollPhase}
           />
-          {bloomEnabled && (
+          {bloomEnabled && bloomOptIn && (
             <EffectComposer>
               <Bloom
-                luminanceThreshold={0.55}
-                luminanceSmoothing={0.25}
-                intensity={0.45}
+                luminanceThreshold={0.82}
+                luminanceSmoothing={0.3}
+                intensity={0.4}
                 mipmapBlur
-                radius={0.6}
+                radius={0.55}
               />
             </EffectComposer>
           )}

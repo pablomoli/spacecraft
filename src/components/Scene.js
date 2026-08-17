@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import React, { useRef, useEffect, useMemo } from "react";
+import { useFrame, useThree, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
+import { TextureLoader } from "three";
 import Earth, { SUN_DIRECTION } from "./Earth";
 
 const EARTH_POS = new THREE.Vector3(0, 0, -1);
@@ -73,38 +74,52 @@ function applyShot(camera, shot, turn = 0) {
 }
 
 
-// Untextured moon: lambert gray from the same sun, faint cool rim.
-// Positioned for the receded rail shot, the one frame with open sky.
-const moonMaterial = new THREE.ShaderMaterial({
-  uniforms: { sunDir: { value: SUN_DIRECTION.clone() } },
-  vertexShader: `
-    varying vec3 vWorldNormal;
-    varying vec3 vViewDir;
-    void main() {
-      vWorldNormal = normalize(mat3(modelMatrix) * normal);
-      vec4 worldPos = modelMatrix * vec4(position, 1.0);
-      vViewDir = normalize(cameraPosition - worldPos.xyz);
-      gl_Position = projectionMatrix * viewMatrix * worldPos;
-    }
-  `,
-  fragmentShader: `
-    uniform vec3 sunDir;
-    varying vec3 vWorldNormal;
-    varying vec3 vViewDir;
-    void main() {
-      vec3 n = normalize(vWorldNormal);
-      float ndl = max(dot(n, normalize(sunDir)), 0.0);
-      vec3 col = vec3(0.60, 0.61, 0.64) * (0.04 + 0.96 * ndl);
-      float rim = pow(1.0 - max(dot(n, normalize(vViewDir)), 0.0), 4.0);
-      col += vec3(0.25, 0.3, 0.42) * rim * 0.25;
-      gl_FragColor = vec4(col, 1.0);
-    }
-  `,
-});
-
+// Solar System Scope 2k moon map, lambert-lit by the same fixed sun,
+// faint cool rim. Positioned for the receded rail shot's open sky.
 function Moon() {
+  const [moonMap] = useLoader(TextureLoader, ["/moon.webp"]);
+
+  const material = useMemo(() => {
+    moonMap.colorSpace = THREE.SRGBColorSpace;
+    moonMap.anisotropy = 4;
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        sunDir: { value: SUN_DIRECTION.clone() },
+        moonMap: { value: moonMap },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vWorldNormal;
+        varying vec3 vViewDir;
+        void main() {
+          vUv = uv;
+          vWorldNormal = normalize(mat3(modelMatrix) * normal);
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vViewDir = normalize(cameraPosition - worldPos.xyz);
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 sunDir;
+        uniform sampler2D moonMap;
+        varying vec2 vUv;
+        varying vec3 vWorldNormal;
+        varying vec3 vViewDir;
+        void main() {
+          vec3 n = normalize(vWorldNormal);
+          float ndl = max(dot(n, normalize(sunDir)), 0.0);
+          vec3 albedo = texture2D(moonMap, vUv).rgb;
+          vec3 col = albedo * (0.05 + 0.95 * ndl);
+          float rim = pow(1.0 - max(dot(n, normalize(vViewDir)), 0.0), 4.0);
+          col += vec3(0.25, 0.3, 0.42) * rim * 0.2;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+  }, [moonMap]);
+
   return (
-    <mesh position={[-3.5, 3.0, 3]} material={moonMaterial}>
+    <mesh position={[-3.5, 3.0, 3]} material={material}>
       <sphereGeometry args={[0.5, 32, 32]} />
     </mesh>
   );

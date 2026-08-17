@@ -216,7 +216,7 @@ function HackathonSection() {
         ))}
       </div>
 
-      <div className="section-content-area">
+      <div className="section-content-area" data-lenis-prevent>
         <div className="project-header-row hackathon-header-row">
           <div className="project-header-text">
             <p className="hackathon-award">{selected.award}</p>
@@ -261,7 +261,7 @@ function ExperienceSection() {
         ))}
       </div>
 
-      <div className="section-content-area">
+      <div className="section-content-area" data-lenis-prevent>
         {selectedExperience.image && (
           <div className="project-image-container">
             <img
@@ -490,7 +490,7 @@ function ProjectsSection() {
       </div>
 
       <div className="section-content-wrapper">
-        <div ref={contentRef} className="section-content-area">
+        <div ref={contentRef} className="section-content-area" data-lenis-prevent>
           <div className="project-header-row">
             {selectedProject.image && (
               <div className="project-image-container">
