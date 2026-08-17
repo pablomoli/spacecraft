@@ -27,9 +27,22 @@ const cmuSerif = localFont({
 })
 
 export const metadata = {
+  metadataBase: new URL('https://pablomolina.space'),
   title: 'Pablo Molina',
   description:
     'Software engineer. Interactive 3D portfolio and the experiment record of ytk, a personal knowledge system.',
+  openGraph: {
+    title: 'Pablo Molina',
+    description:
+      'Software engineer. Interactive 3D portfolio and the experiment record of ytk, a personal knowledge system.',
+    url: '/',
+    siteName: 'Pablo Molina',
+    type: 'website',
+    images: [{ url: '/logo.webp', width: 1024, height: 1024, alt: 'PM rocket logo' }],
+  },
+  twitter: {
+    card: 'summary',
+  },
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },

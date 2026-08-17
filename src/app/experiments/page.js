@@ -7,6 +7,25 @@ export const metadata = {
   title: "Experiments",
   description:
     "Writeups from the experiment record of ytk, a personal knowledge system.",
+  openGraph: {
+    title: "The experiment record",
+    description:
+      "Writeups from the experiment record of ytk, a personal knowledge system.",
+    url: "/experiments/",
+    siteName: "Pablo Molina",
+    type: "website",
+    images: [
+      {
+        url: "/images/experiments/card-coastlines-named-continents.webp",
+        width: 900,
+        height: 483,
+        alt: "Map of note clusters drawn as named continents",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function ExperimentsIndex() {

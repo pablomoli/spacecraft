@@ -11,7 +11,21 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const e = getExperiment(slug);
-  return { title: e.title };
+  return {
+    title: e.title,
+    description: e.hook,
+    openGraph: {
+      title: e.title,
+      description: e.hook,
+      url: `/experiments/${e.slug}/`,
+      siteName: "Pablo Molina",
+      type: "article",
+      images: [{ url: e.card, alt: e.figures[0].alt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+    },
+  };
 }
 
 export default async function ExperimentPage({ params }) {
