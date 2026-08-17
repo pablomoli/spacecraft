@@ -674,8 +674,6 @@ export default function Home() {
         galaxyConfig={galaxyConfig}
         scrollPhase={scrollPhase}
         showUI={showUI}
-        warpRef={animationProxyRef}
-        wormholeProgress={wormholeProgress}
       />
 
       <div

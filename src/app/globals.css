@@ -1477,6 +1477,17 @@ body::before {
   padding: 3rem 2rem 1rem;
 }
 
+/* Figure-less articles (how-i-work) center at reading measure instead
+   of hugging the left edge of the wide shell */
+.record-article:not(.has-figure) {
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.record-article:not(.has-figure) .record-prose p {
+  max-width: none;
+}
+
 /* Writeup layout: prose column at reading measure, figure beside it
    using the remaining width instead of stacking below */
 .record-article.has-figure {

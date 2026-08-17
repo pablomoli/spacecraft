@@ -130,8 +130,8 @@ function Moon() {
 // In-scene stars: the OGL galaxy behind the canvas is screen-space and
 // cannot parallax, so these two world-space shells are what make the
 // camera shots read as travel. Deterministic seed keeps SSR/CSR stable.
-function ParallaxStars({ warpState }) {
-  const { positions, sizes } = useMemo(() => {
+function ParallaxStars() {
+  const geometry = useMemo(() => {
     let seed = 42;
     const rand = () => {
       seed = (seed * 16807) % 2147483647;
@@ -140,8 +140,8 @@ function ParallaxStars({ warpState }) {
     const positions = [];
     const sizes = [];
     const shells = [
-      { count: 900, radius: 24, jitter: 6, size: 0.09 },
-      { count: 600, radius: 48, jitter: 10, size: 0.16 },
+      { count: 630, radius: 24, jitter: 6, size: 0.09 },
+      { count: 420, radius: 48, jitter: 10, size: 0.16 },
     ];
     shells.forEach(({ count, radius, jitter, size }) => {
       for (let i = 0; i < count; i++) {
@@ -153,32 +153,11 @@ function ParallaxStars({ warpState }) {
         sizes.push(size * (0.5 + rand()));
       }
     });
-    return { positions, sizes };
-  }, []);
-
-  const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
     geo.setAttribute("aSize", new THREE.Float32BufferAttribute(sizes, 1));
     return geo;
-  }, [positions, sizes]);
-
-  // Streaks: each star twice, the aEnd=1 vertex elongated radially away
-  // from the camera in the vertex shader - hyperspace lines that only
-  // exist while uWarp > 0
-  const streakGeometry = useMemo(() => {
-    const pos = [];
-    const ends = [];
-    for (let i = 0; i < positions.length; i += 3) {
-      pos.push(positions[i], positions[i + 1], positions[i + 2]);
-      pos.push(positions[i], positions[i + 1], positions[i + 2]);
-      ends.push(0, 1);
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-    geo.setAttribute("aEnd", new THREE.Float32BufferAttribute(ends, 1));
-    return geo;
-  }, [positions]);
+  }, []);
 
   const material = useMemo(
     () =>
@@ -186,70 +165,32 @@ function ParallaxStars({ warpState }) {
         transparent: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
-        uniforms: { uWarp: { value: 0 } },
         vertexShader: `
           attribute float aSize;
+          varying float vSize;
           void main() {
+            vSize = aSize;
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
             gl_PointSize = aSize * 1400.0 / -mv.z;
             gl_Position = projectionMatrix * mv;
           }
         `,
         fragmentShader: `
-          uniform float uWarp;
+          varying float vSize;
           void main() {
             float d = length(gl_PointCoord - 0.5);
             float a = smoothstep(0.5, 0.05, d);
-            gl_FragColor = vec4(vec3(0.9, 0.92, 1.0), a * 0.85 * (1.0 - uWarp * 0.85));
+            gl_FragColor = vec4(vec3(0.9, 0.92, 1.0), a * 0.85);
           }
         `,
       }),
     [],
   );
 
-  const streakMaterial = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: { uWarp: { value: 0 } },
-        vertexShader: `
-          attribute float aEnd;
-          uniform float uWarp;
-          void main() {
-            vec3 pos = position;
-            vec3 dir = normalize(position - cameraPosition);
-            pos += dir * aEnd * uWarp * uWarp * 16.0;
-            gl_Position = projectionMatrix * viewMatrix * vec4(pos, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform float uWarp;
-          void main() {
-            gl_FragColor = vec4(vec3(0.8, 0.88, 1.0), uWarp * 0.55);
-          }
-        `,
-      }),
-    [],
-  );
-
-  useFrame(() => {
-    const w = warpState?.current ?? 0;
-    material.uniforms.uWarp.value = w;
-    streakMaterial.uniforms.uWarp.value = w;
-  });
-
-  return (
-    <>
-      <points geometry={geometry} material={material} />
-      <lineSegments geometry={streakGeometry} material={streakMaterial} />
-    </>
-  );
+  return <points geometry={geometry} material={material} />;
 }
 
-function Scene({ scrollProgress, extraScrollProgress, scrollPhase, warpRef }) {
-  const warpState = useRef(0);
+function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   const { camera } = useThree();
   // Section boundaries as fractions of the normal scroll span, measured
   // from the DOM (sections are not uniform height: the rail is 500vh)
@@ -309,19 +250,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase, warpRef }) {
         camera.position.y += (Math.random() - 0.5) * shakeIntensity;
         camera.position.z += (Math.random() - 0.5) * shakeIntensity;
       }
-      warpState.current = 0;
-    } else if (scrollPhase === "wormhole") {
-      // Warp: accelerate forward along the turned view; Earth slides
-      // off-frame behind while the stars streak, then the canvas
-      // crossfades into the galaxy at peak
-      const wp = warpRef?.current?.progress ?? 0;
-      applyShot(camera, KEYS[KEYS.length - 1], Math.PI / 2);
-      const dir = new THREE.Vector3();
-      camera.getWorldDirection(dir);
-      camera.position.addScaledVector(dir, wp * wp * 30);
-      warpState.current = wp;
     }
-    if (scrollPhase === "normal") warpState.current = 0;
   });
 
   return (
@@ -333,7 +262,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase, warpRef }) {
         <Earth />
       </group>
       <Moon />
-      <ParallaxStars warpState={warpState} />
+      <ParallaxStars />
     </>
   );
 }
