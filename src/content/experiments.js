@@ -253,6 +253,20 @@ export const externalSections = [
     sectionUrl: `${RECORD}/10-tag-coherence`,
   },
   {
+    number: '11',
+    title: 'Animations',
+    hook: 'can the two overnight experiments be explained in motion?',
+    card: '/images/experiments/card-ext-11-animations.webp',
+    sectionUrl: `${RECORD}/11-animations`,
+  },
+  {
+    number: '13',
+    title: 'Space in 3D',
+    hook: 'a still 3D scatter is ambiguous — does the claim survive a moving camera?',
+    card: '/images/experiments/card-ext-13-space-3d.webp',
+    sectionUrl: `${RECORD}/13-space-3d`,
+  },
+  {
     number: '14',
     title: 'Garden allometry',
     hook: 'what scale and branching geometry should the garden trees use?',
