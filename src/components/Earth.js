@@ -43,7 +43,9 @@ const surfaceFragment = /* glsl */ `
 
     vec3 day = texture2D(dayMap, vUv).rgb;
     vec3 night = texture2D(nightMap, vUv).rgb;
-    float cloud = texture2D(cloudMap, vec2(vUv.x + time * 0.0035, vUv.y)).r;
+    // 0.012 uv/s crosses the visible face in ~40s: alive at a glance,
+    // still stately; 0.0035 took 2.5 minutes and read as frozen
+    float cloud = texture2D(cloudMap, vec2(vUv.x + time * 0.012, vUv.y)).r;
 
     vec3 surf = day * (0.05 + 0.95 * dayF);
 
