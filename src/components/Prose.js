@@ -34,8 +34,8 @@ export function Footnotes({ footnotes, slug }) {
 export function DraftNotice() {
   return (
     <aside className="draft-notice">
-      Draft. Placeholder copy pending a rewrite in my own words; quoted figures
-      unverified against the source until then.
+      Draft. Placeholder copy pending a rewrite in my own words. Quoted
+      figures verified against the section records 2026-08-16.
     </aside>
   );
 }

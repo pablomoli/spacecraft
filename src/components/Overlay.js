@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { gsap } from "gsap";
 import TextPressure from "./TextPressure";
+import Link from "next/link";
 import { experiments } from "../content/experiments";
 
 // GSAP Glitch Subtitle Component
@@ -589,18 +590,18 @@ function ExperimentsRail({ scrollContainerRef, kicker }) {
             each card opens the writeup.
           </p>
         </div>
-        <a href="/experiments/" className="exp-rail-viewall">view all</a>
+        <Link href="/experiments/" className="exp-rail-viewall">view all</Link>
       </div>
       <div className="exp-rail" ref={trackRef}>
         {experiments.map((e) => (
-          <a key={e.slug} href={`/experiments/${e.slug}/`} className="exp-card exp-card--rail">
+          <Link key={e.slug} href={`/experiments/${e.slug}/`} className="exp-card exp-card--rail">
             <span className="exp-card-figure">
               <img src={e.figure.card} alt={e.figure.alt} loading="lazy" />
             </span>
             <span className="exp-card-kicker">Experiment {e.number}</span>
             <span className="exp-card-title">{e.title}</span>
             <span className="exp-card-hook">{e.hook}</span>
-          </a>
+          </Link>
         ))}
       </div>
       <div className="exp-rail-progress">
