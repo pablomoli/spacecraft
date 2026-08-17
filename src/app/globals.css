@@ -1350,3 +1350,62 @@ body::before {
     transition: none;
   }
 }
+
+/* Draft markers: new copy carries a visible tag until red-penned */
+.draft-tag {
+  font-family: var(--font-mono-stack);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(242, 185, 80, 0.35);
+  padding: 0.1rem 0.45rem;
+  margin-left: 0.75rem;
+  vertical-align: middle;
+}
+
+.hero-draft {
+  display: inline-block;
+  margin: 0 auto;
+}
+
+/* Contact: plain-text email + client-side copy */
+.contact-email-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.contact-email {
+  font-family: var(--font-mono-stack);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  user-select: all;
+}
+
+.copy-email-button {
+  font-family: var(--font-mono-stack);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--frame);
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  transition: color var(--t-micro) var(--ease-quick),
+    border-color var(--t-micro) var(--ease-quick);
+}
+
+.copy-email-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.copy-email-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

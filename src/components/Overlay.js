@@ -4,14 +4,13 @@ import TextPressure from "./TextPressure";
 
 // GSAP Glitch Subtitle Component
 function GlitchSubtitle() {
+  // DRAFT copy: rotation rewritten for the SWE/ML search; Pablo red-pens before merge
   const subtitles = useMemo(() => [
-    "Space Explorer & Developer",
-    "Full-Stack Developer",
-    "Cosmic Code Creator",
-    "Surveyor of Digital Landscapes",
+    "Software Engineer",
+    "I build systems, then measure them",
+    "ML & Retrieval Experimenter",
+    "WebGL Tinkerer",
     "Sci-Fi Enthusiast",
-    "Builder of Digital Worlds",
-    "CAD Drafter",
   ], []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -650,20 +649,24 @@ function ProjectsSection() {
   );
 }
 
+// Section copy marked draft: true renders a DRAFT tag in the kicker and
+// does not ship until Pablo rewrites it in his own voice.
 const sections = [
   {
     id: "hero",
     title: "Pablo Molina",
     subtitle: null, // Will use GlitchSubtitle component instead
+    draft: true,
     description:
-      "Navigate through space to discover more about my journey, projects, and skills.",
+      "Scroll to travel. Projects, experiments, and the record of what held up.",
   },
   {
     id: "about",
     title: "About Me",
-    subtitle: "A constellation of experiences",
+    subtitle: "build it, then measure it",
+    draft: true,
     description:
-      "Curious student passionate about technology, design, and exploration. My journey began with web development and has led me through various technologies, developing a unique perspective on digital experiences.",
+      "Software engineer finishing a CS degree, building systems and then checking whether they actually work. I built ytk, a knowledge system over everything I save, and ran 40+ numbered experiments on it: embedding geometry, retrieval evals, interpretability. Where a result did not survive scrutiny, the correction is published next to the claim. The toolkit underneath: ML and evals, full-stack systems, real-time graphics.",
   },
   {
     id: "technologies",
@@ -695,13 +698,60 @@ const sections = [
   },
   {
     id: "contact",
-    title: "Contact Me",
-    subtitle: "Let's establish contact",
+    title: "Contact",
+    subtitle: "open to SWE / ML roles",
+    draft: true,
     description:
-      "Ready to collaborate? Send a signal my way and let's create something extraordinary together.",
-    links: [{ name: "Email", url: "mailto:pablomolinarojas@gmail.com" }],
+      "The fastest channel is email. Written out below so it always works; the button copies it.",
+    email: "pablomolinarojas@gmail.com",
   },
 ];
+
+// Plain-text email with client-side copy: always works, nothing to
+// validate, and not a mailto scrape target.
+function ContactEmail({ email }) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef(null);
+
+  const copy = useCallback(() => {
+    const confirm = () => {
+      setCopied(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 1600);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = email;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        if (document.execCommand("copy")) confirm();
+      } finally {
+        document.body.removeChild(ta);
+      }
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(email).then(confirm).catch(fallback);
+    } else {
+      fallback();
+    }
+  }, [email]);
+
+  useEffect(() => () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  }, []);
+
+  return (
+    <div className="contact-email-row">
+      <span className="contact-email">{email}</span>
+      <button type="button" className="copy-email-button" onClick={copy}>
+        {copied ? "copied" : "copy"}
+      </button>
+    </div>
+  );
+}
 
 function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
   const isAnimatingRef = useRef(false);
@@ -805,18 +855,10 @@ function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
                 ))}
               </div>
             )}
-            {/* Contact links */}
-            {section.links && (
+            {/* Contact email */}
+            {section.email && (
               <div className="contact-section-wrapper">
-                <div className="contact-content">
-                  <div className="contact-links">
-                    {section.links.map((link, idx) => (
-                      <a key={idx} href={link.url} className="contact-button">
-                        {link.name}
-                      </a>
-                    ))}
-                  </div>
-                </div>
+                <ContactEmail email={section.email} />
                 <div className="copyright-info">
                   <p>Built and designed by Pablo Molina.</p>
                   <p>All rights reserved. ©</p>
@@ -854,11 +896,13 @@ function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
                   {title}
                   <GlitchSubtitle />
                   <p className="description">{section.description}</p>
+                  {section.draft && <p className="draft-tag hero-draft">draft copy</p>}
                 </>
               ) : (
                 <div className="section-panel">
                   <p className="panel-kicker">
                     {String(sectionIndex).padStart(2, "0")} / {section.id.toUpperCase()}
+                    {section.draft && <span className="draft-tag">draft copy</span>}
                   </p>
                   {title}
                   {section.subtitle && <p className="subtitle">{section.subtitle}</p>}
