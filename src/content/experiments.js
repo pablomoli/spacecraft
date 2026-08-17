@@ -12,11 +12,15 @@ export const experiments = [
     number: '30',
     title: 'My notes have a coastline',
     draft: true,
-    figure: {
-      src: '/images/experiments/coastlines-named-continents.png',
-      card: '/images/experiments/card-coastlines-named-continents.webp',
-      alt: 'The knowledge base rendered as a world map with 27 named continents on a dark sphere',
-    },
+    card: '/images/experiments/card-coastlines-named-continents.webp',
+    figures: [
+      { src: '/images/experiments/coastlines-01-the-planet-unrolled.webp', alt: 'The distance field, Mollweide-projected', caption: 'The distance field on a 0.5 degree grid, Mollweide-projected: brightness is nearness to content, the contour is the coast at the calibrated radius.' },
+      { src: '/images/experiments/coastlines-02-the-named-continents.webp', alt: 'Land components labeled by dominant themes', caption: 'Wrap-aware land components, tinted and labeled at their interior poles by the dominant themes of the tiles they carry.' },
+      { src: '/images/experiments/coastlines-04-three-coast-rules.webp', alt: 'Three coast rules, same land area', caption: 'Hard-min circles vs softmin metaballs vs seeded warp, land area held constant across all three.' },
+      { src: '/images/experiments/coastlines-05-globes-three-rules.webp', alt: 'The three rules on orthographic globes', caption: 'The three coast rules judged where they will live: per-pixel orthographic hemispheres, limb-shaded, one camera.' },
+      { src: '/images/experiments/coastlines-06-fbm-and-domain-warp.webp', alt: 'Perlin fBm and domain warp vs value noise', caption: 'The noise step done per the literature: Perlin-gradient fBm and Quilez domain warp against the shipped 2-octave value noise.' },
+      { src: '/images/experiments/coastlines-07-the-shuffle-knob.webp', alt: 'Three shuffle seeds, rerolled shorelines', caption: 'The reroll parameter: seeded tangent jitter inside the field computation only. Same clusters, rerolled shorelines; rendered tiles never move.' },
+    ],
     sectionUrl: `${RECORD}/30-coastlines`,
     paragraphs: [
       'My knowledge base is about 650 notes. Each one is turned into a point on a map[^1], and related notes land near each other, so the whole collection spreads across a sphere like settlements on a planet. That raised a question I could not let go of: where exactly does my knowledge end and emptiness begin?',
@@ -37,11 +41,15 @@ export const experiments = [
     number: '12',
     title: 'Every note points the same way',
     draft: true,
-    figure: {
-      src: '/images/experiments/the-cone.png',
-      card: '/images/experiments/card-the-cone.webp',
-      alt: 'Observed embedding directions forming a narrow cone against an isotropic null',
-    },
+    card: '/images/experiments/card-the-cone.webp',
+    figures: [
+      { src: '/images/experiments/the-cone-01-the-cone.webp', alt: 'The corpus against an isotropic null', caption: 'The corpus does not fill its sphere: the mean vector is 11x longer than chance allows.' },
+      { src: '/images/experiments/the-cone-02-spectrum.webp', alt: 'Participation ratio', caption: 'Participation ratio 104 of 1024: no small set of directions carries the corpus.' },
+      { src: '/images/experiments/the-cone-03-dynamic-range.webp', alt: 'Tag z before and after centring', caption: 'Every tag\'s z before and after centring, and the observed similarities behind it.' },
+      { src: '/images/experiments/the-cone-04-the-cone-drawn.webp', alt: 'The geometry drawn', caption: 'The geometry itself: the corpus, an isotropic control, and the centred corpus, with the origin marked in each.' },
+      { src: '/images/experiments/the-cone-05-gram-matrix.webp', alt: 'Note-to-note similarity', caption: 'All 493 notes against each other, one ordering, two geometries.' },
+      { src: '/images/experiments/the-cone-06-angular.webp', alt: 'Angle from the shared direction', caption: 'Angle from the shared direction, against what randomness gives.' },
+    ],
     sectionUrl: `${RECORD}/12-embedding-geometry`,
     paragraphs: [
       'My search engine kept telling me that any two of my notes were somewhat related. A cooking video and a paper on neural networks: somewhat related. That is either a deep truth about me or a broken ruler, and I wanted to know which.',
@@ -60,11 +68,11 @@ export const experiments = [
     number: '24',
     title: 'Teaching my search index to explain itself',
     draft: true,
-    figure: {
-      src: '/images/experiments/native-sae-latents.png',
-      card: '/images/experiments/card-native-sae-latents.webp',
-      alt: 'Named sparse autoencoder latents recovered from production embeddings',
-    },
+    card: '/images/experiments/card-native-sae-latents.webp',
+    figures: [
+      { src: '/images/experiments/native-sae-01-native-sae-cost.webp', alt: 'Reconstruction sweep', caption: 'The config sweep: held-out reconstruction cosine across dictionary and latent-count combinations.' },
+      { src: '/images/experiments/native-sae-02-latents-and-taste.webp', alt: 'Named latents and the taste regression', caption: 'The most-active named latents with exemplars, and the save-prediction experiment with confound isolation.' },
+    ],
     sectionUrl: `${RECORD}/24-native-sae`,
     paragraphs: [
       'My search engine stores every note as a long list of numbers that no human can read. It works, but it cannot tell me what it thinks a note is about. I wanted a translation layer: the same space, but with names.',
@@ -83,11 +91,12 @@ export const experiments = [
     number: '08',
     title: 'The alarm that cried wolf every day',
     draft: true,
-    figure: {
-      src: '/images/experiments/eval-gate-verdicts.png',
-      card: '/images/experiments/card-eval-gate-verdicts.webp',
-      alt: 'Gate verdicts over time: growth passes after the freeze, an injected regression still fails',
-    },
+    card: '/images/experiments/card-eval-gate-verdicts.webp',
+    figures: [
+      { src: '/images/experiments/eval-gate-01-corpus-growth.webp', alt: 'Corpus growth', caption: 'The corpus growing under the gate: every ingest enlarged the haystack the queries were scored against.' },
+      { src: '/images/experiments/eval-gate-02-growth-drift-curve.webp', alt: 'Score drift from growth alone', caption: 'Score drift as a pure function of corpus growth, before the freeze: red for bigger, not broken.' },
+      { src: '/images/experiments/eval-gate-03-gate-verdicts.webp', alt: 'The acceptance run', caption: 'Frozen scoring on the grown corpus passes; the same run with a deliberately injected regression still fails.' },
+    ],
     sectionUrl: `${RECORD}/08-eval-gate-freeze`,
     paragraphs: [
       'My knowledge base has an automated quality check: 156 search queries with known right answers, run before every code change, so I cannot accidentally make search worse. One problem. The collection grows every day, and growth alone made the scores drop. The alarm went red when I broke something and red when I simply added notes, which teaches a person to ignore alarms.',
@@ -104,11 +113,10 @@ export const experiments = [
     number: '40',
     title: 'Does my second brain pay rent',
     draft: true,
-    figure: {
-      src: '/images/experiments/reuse-ladder.png',
-      card: '/images/experiments/card-reuse-ladder.webp',
-      alt: 'Evidence ladder from notes that merely exist to notes explicitly cited in shipped work',
-    },
+    card: '/images/experiments/card-reuse-ladder.webp',
+    figures: [
+      { src: '/images/experiments/reuse-ladder-01-reuse-ladder.webp', alt: 'The evidence ladder and the calendar', caption: 'Left, evidence per note from weakest to strongest: 671 embedded, 153 read in sessions, 57 elective source reads, 1 cited across all 56 briefs. Right, the same sessions on a week axis: the loop closing is a recent habit.' },
+    ],
     sectionUrl: `${RECORD}/40-reuse-ladder`,
     paragraphs: [
       'I save a lot: videos, articles, voice memos, all summarized and searchable. The uncomfortable question is whether any of it ever comes back, or whether I built an expensive shelf.',

@@ -1508,7 +1508,8 @@ body::before {
 .record-article.has-figure .record-kicker { grid-area: kicker; }
 .record-article.has-figure .record-title { grid-area: title; }
 .record-article.has-figure .record-prose:first-of-type { grid-area: prose; }
-.record-article.has-figure .record-figure { grid-area: figure; align-self: start; position: sticky; top: 2rem; margin: 0; }
+.record-article.has-figure .record-figures { grid-area: figure; align-self: start; display: flex; flex-direction: column; gap: 1.5rem; }
+.record-article.has-figure .record-figure { margin: 0; }
 .record-article.has-figure .record-section-link { grid-area: link; justify-self: start; }
 .record-article.has-figure .record-prose:last-of-type { grid-area: notes; }
 .record-article.has-figure .record-pager { grid-area: pager; }
@@ -1518,8 +1519,7 @@ body::before {
     display: block;
   }
 
-  .record-article.has-figure .record-figure {
-    position: static;
+  .record-article.has-figure .record-figures {
     margin: 2rem 0 1rem;
   }
 }

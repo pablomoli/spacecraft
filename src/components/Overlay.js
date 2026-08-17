@@ -6,10 +6,10 @@ import { experiments } from "../content/experiments";
 
 // GSAP Glitch Subtitle Component
 function GlitchSubtitle() {
-  // DRAFT copy: rotation rewritten for the SWE/ML search; Pablo red-pens before merge
   const subtitles = useMemo(() => [
     "Software Engineer",
-    "I build systems, then measure them",
+    "Cosmic Code Creator",
+    "Surveyor of Digital Landscapes",
     "ML & Retrieval Experimenter",
     "WebGL Tinkerer",
     "Sci-Fi Enthusiast",
@@ -81,10 +81,10 @@ const experiences = [
     period: "LIFE & PASSIONS",
     highlights: [
       "Avid sci-fi reader exploring worlds from Dune to Annihilation series",
-      "Sports enthusiast who finds balance through soccer, boxing, and outdoor adventures",
+      "Sports enthusiast who finds balance through soccer, mma, and outdoor adventures",
       "Problem-solver who approaches every challenge with curiosity and persistence",
       "Space exploration fanatic following rocket launches and astronomical discoveries",
-      "Advocate for clean code, user experience, and technology that empowers people",
+      "Advocate for clean code, user experience, and technology that empowers curiosity",
     ],
   },
 
@@ -92,11 +92,11 @@ const experiences = [
     id: "university",
     company: "University of Central Florida",
     role: "B.S. Computer Science, Math Minor",
-    period: "AUG 2023 - SPRING 2026",
+    period: "AUG 2023 - MAY 2026",
     highlights: [
-      "Senior with a 3.5 GPA, consistently on the Dean's List",
+      "Graduated with a 3.5 GPA, consistently on the Dean's List",
       "Coursework in Data Structures & Algorithms, Security in Computing, Computer Logic & Organization, and Discrete Structures",
-      "Math minor spanning Calculus I-III, Linear Algebra, Differential Equations, and Mathematical Modeling",
+      "Math minor spanning Calculus I-III, Linear Algebra, Differential Equations, and Differential Mathematical Modeling",
       "Active member of Knight Hacks, UCF's competitive hackathon organization",
     ],
   },
@@ -596,7 +596,7 @@ function ExperimentsRail({ scrollContainerRef, kicker }) {
         {experiments.map((e) => (
           <Link key={e.slug} href={`/experiments/${e.slug}/`} className="exp-card exp-card--rail">
             <span className="exp-card-figure">
-              <img src={e.figure.card} alt={e.figure.alt} loading="lazy" />
+              <img src={e.card} alt={e.figures[0].alt} loading="lazy" />
             </span>
             <span className="exp-card-kicker">Experiment {e.number}</span>
             <span className="exp-card-title">{e.title}</span>
@@ -612,24 +612,20 @@ function ExperimentsRail({ scrollContainerRef, kicker }) {
   );
 }
 
-// Section copy marked draft: true renders a DRAFT tag in the kicker and
-// does not ship until Pablo rewrites it in his own voice.
 const sections = [
   {
     id: "hero",
     title: "Pablo Molina",
     subtitle: null, // Will use GlitchSubtitle component instead
-    draft: true,
     description:
       "Scroll to travel. Projects, experiments, and the record of what held up.",
   },
   {
     id: "about",
     title: "About Me",
-    subtitle: "build it, then measure it",
-    draft: true,
+    subtitle: "A constellation of experiences",
     description:
-      "Software engineer finishing a CS degree, building systems and then checking whether they actually work. I built ytk, a knowledge system over everything I save, and ran 40+ numbered experiments on it: embedding geometry, retrieval evals, interpretability. Where a result did not survive scrutiny, the correction is published next to the claim. The toolkit underneath: ML and evals, full-stack systems, real-time graphics.",
+      "Computer science grad from UCF, working across full-stack systems, ML, and real-time graphics. Most of my recent time goes into ytk, a personal knowledge system, and the experiment record that grew out of it. Before that: geospatial tooling for a land surveying company, a fintech R&D internship, and a lot of hackathons.",
   },
   {
     id: "projects",
@@ -652,9 +648,8 @@ const sections = [
     id: "contact",
     title: "Contact",
     subtitle: "open to SWE / ML roles",
-    draft: true,
     description:
-      "The fastest channel is email. Written out below so it always works; the button copies it.",
+      "The fastest channel is email.",
     email: "pablomolinarojas@gmail.com",
   },
 ];

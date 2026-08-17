@@ -27,12 +27,14 @@ export default async function ExperimentPage({ params }) {
         <div className="record-prose">
           <Prose paragraphs={e.paragraphs} slug={e.slug} />
         </div>
-        <figure className="record-figure">
-          <img src={e.figure.src} alt={e.figure.alt} />
-          <figcaption>
-            From the section record. Full anatomy and meta line on GitHub.
-          </figcaption>
-        </figure>
+        <div className="record-figures">
+          {e.figures.map((f) => (
+            <figure key={f.src} className="record-figure">
+              <img src={f.src} alt={f.alt} loading="lazy" />
+              <figcaption>{f.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
         <a className="record-section-link" href={e.sectionUrl}>
           Read the full section, figures and all.
         </a>

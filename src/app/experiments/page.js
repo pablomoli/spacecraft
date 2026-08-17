@@ -21,7 +21,7 @@ export default function ExperimentsIndex() {
         {experiments.map((e) => (
           <Link key={e.slug} href={`/experiments/${e.slug}/`} className="exp-card">
             <span className="exp-card-figure">
-              <img src={e.figure.card} alt={e.figure.alt} loading="lazy" />
+              <img src={e.card} alt={e.figures[0].alt} loading="lazy" />
             </span>
             <span className="exp-card-kicker">Experiment {e.number}</span>
             <span className="exp-card-title">{e.title}</span>

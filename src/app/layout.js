@@ -29,7 +29,7 @@ const cmuSerif = localFont({
 export const metadata = {
   title: 'Pablo Molina',
   description:
-    'Software engineer. Interactive 3D portfolio and a measured experiment record: embeddings, retrieval evals, interpretability.',
+    'Software engineer. Interactive 3D portfolio and the experiment record of ytk, a personal knowledge system.',
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
