@@ -1,70 +1,118 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import Earth from "./Earth";
 
-// Constants for camera movement
-const CAMERA_RADIUS_FACTOR = 1.6;
-const BASE_CAMERA_RADIUS = 5;
+const EARTH_POS = new THREE.Vector3(0, 0, -1);
+const UP = new THREE.Vector3(0, 1, 0);
+
+// One shot per journey section, matched to the measured panel side:
+// earthX is where Earth sits on screen (-1 left, +1 right), opposite
+// the panel. Radius recedes for the experiments rail so the cards own
+// the frame. Angles sum to one full orbit; with the sun fixed in world
+// space the journey travels day -> terminator -> night -> crescent -> day.
+const KEYS = [
+  { a: 0.0, r: 5.2, earthX: 0.0, earthY: -0.1 }, // hero: centered
+  { a: 0.18, r: 4.6, earthX: -0.55, earthY: 0.05 }, // about: panel right
+  { a: 0.38, r: 4.8, earthX: 0.55, earthY: 0.05 }, // projects: panel left
+  { a: 0.55, r: 9.5, earthX: 0.0, earthY: 0.12 }, // experiments: recede
+  { a: 0.75, r: 4.8, earthX: 0.55, earthY: 0.05 }, // hackathons: panel left
+  { a: 1.0, r: 6.5, earthX: -0.5, earthY: 0.0 }, // contact: panel right
+];
+
+// Hold each shot while the panel is pinned; ease to the next during the
+// last part of the section, when the panel is scrolling away
+const HOLD = 0.55;
+
+const smootherstep = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+
+function shotAt(fractions, progress) {
+  let i = 0;
+  for (let k = 0; k < fractions.length; k++) {
+    if (progress >= fractions[k]) i = k;
+  }
+  const start = fractions[i];
+  const end = i + 1 < fractions.length ? fractions[i + 1] : 1;
+  const local = end > start ? (progress - start) / (end - start) : 0;
+  const from = KEYS[i];
+  const to = KEYS[Math.min(i + 1, KEYS.length - 1)];
+  const t = local <= HOLD ? 0 : smootherstep((local - HOLD) / (1 - HOLD));
+  return {
+    a: from.a + (to.a - from.a) * t,
+    r: from.r + (to.r - from.r) * t,
+    earthX: from.earthX + (to.earthX - from.earthX) * t,
+    earthY: from.earthY + (to.earthY - from.earthY) * t,
+  };
+}
+
+function applyShot(camera, shot, turn = 0) {
+  const angle = shot.a * Math.PI * 2;
+  camera.position.set(
+    EARTH_POS.x + Math.sin(angle) * shot.r,
+    EARTH_POS.y + 0.4,
+    EARTH_POS.z + Math.cos(angle) * shot.r,
+  );
+
+  // Frame Earth into its zone: offset the lookAt target along camera
+  // right; Earth lands on the opposite side of the screen
+  const dir = EARTH_POS.clone().sub(camera.position).normalize();
+  const right = new THREE.Vector3().crossVectors(dir, UP).normalize();
+  const k = shot.r * 0.42;
+  const target = EARTH_POS.clone()
+    .addScaledVector(right, -shot.earthX * k)
+    .addScaledVector(UP, shot.earthY * k);
+
+  if (turn > 0) {
+    // Wormhole approach: rotate the view away from Earth
+    const away = target.clone().sub(camera.position);
+    away.applyAxisAngle(UP, -turn);
+    camera.lookAt(camera.position.clone().add(away));
+  } else {
+    camera.lookAt(target);
+  }
+}
 
 function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
-  const earthRef = useRef();
-  const lightRef = useRef();
   const { camera } = useThree();
-  
-  // Initialize camera position
-  React.useEffect(() => {
-    camera.position.set(0, 0, BASE_CAMERA_RADIUS);
-    camera.lookAt(0, 0, 0);
+  // Section boundaries as fractions of the normal scroll span, measured
+  // from the DOM (sections are not uniform height: the rail is 500vh)
+  const fractionsRef = useRef([0, 0.133, 0.267, 0.4, 0.733, 0.867]);
+
+  useEffect(() => {
+    const measure = () => {
+      const sections = document.querySelectorAll(
+        ".scroll > .section:not(.extra-section)",
+      );
+      if (!sections.length) return;
+      let total = 0;
+      const offsets = [];
+      sections.forEach((s) => {
+        offsets.push(total);
+        total += s.offsetHeight;
+      });
+      if (total > 0) fractionsRef.current = offsets.map((o) => o / total);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    applyShot(camera, KEYS[0]);
   }, [camera]);
 
   useFrame(() => {
     if (!scrollProgress) return;
 
-    // Normal scroll (0-100%): Camera orbits Earth
-    if (scrollPhase === 'normal') {
-      const normalProgress = scrollProgress.current;
-      
-      // Calculate orbit position (clockwise when viewed from above)
-      const angle = normalProgress * Math.PI * 2; // Full rotation
-      const radius = BASE_CAMERA_RADIUS * (1 + (CAMERA_RADIUS_FACTOR - 1) * normalProgress);
-      
-      camera.position.x = Math.sin(angle) * radius;
-      camera.position.z = Math.cos(angle) * radius;
-      camera.position.y = 0; // Keep height constant
-
-      // Update light position to orbit with camera
-      if (lightRef.current) {
-        const lightAngle = angle;
-        const lightRadius = 8;
-        lightRef.current.position.x = Math.sin(lightAngle) * lightRadius;
-        lightRef.current.position.z = Math.cos(lightAngle) * lightRadius;
-        lightRef.current.position.y = 5;
-      }
-
-      // Always look at Earth
-      camera.lookAt(0, 0, 0);
-    }
-    
-    // Extra scroll section: Camera turns away
-    else if (scrollPhase === 'extra' && extraScrollProgress) {
+    if (scrollPhase === "normal") {
+      applyShot(camera, shotAt(fractionsRef.current, scrollProgress.current));
+    } else if (scrollPhase === "extra" && extraScrollProgress) {
       const extraProgress = extraScrollProgress.current;
-      
-      // Keep camera at its last position from normal scroll
-      const finalAngle = Math.PI * 2;
-      const finalRadius = BASE_CAMERA_RADIUS * CAMERA_RADIUS_FACTOR;
-      camera.position.x = Math.sin(finalAngle) * finalRadius;
-      camera.position.z = Math.cos(finalAngle) * finalRadius;
-      
-      // Turn camera 90 degrees to the right
-      const turnAngle = extraProgress * (Math.PI / 2);
-      const lookAtX = Math.sin(finalAngle + turnAngle) * finalRadius;
-      const lookAtZ = Math.cos(finalAngle + turnAngle) * finalRadius;
-      
-      camera.lookAt(lookAtX, 0, lookAtZ);
-      
-      // Add subtle shake during charging (last 20%)
+      applyShot(camera, KEYS[KEYS.length - 1], extraProgress * (Math.PI / 2));
+
+      // Subtle shake while the wormhole charges
       if (extraProgress > 0.8) {
-        const shakeIntensity = (extraProgress - 0.8) / 0.2 * 0.01;
+        const shakeIntensity = ((extraProgress - 0.8) / 0.2) * 0.01;
         camera.position.x += (Math.random() - 0.5) * shakeIntensity;
         camera.position.y += (Math.random() - 0.5) * shakeIntensity;
         camera.position.z += (Math.random() - 0.5) * shakeIntensity;
@@ -74,10 +122,10 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
 
   return (
     <>
-      <ambientLight intensity={0.2} />
-      <directionalLight ref={lightRef} position={[5, 5, 5]} intensity={1} />
-
-      <group ref={earthRef} position={[0, 0, -1]}>
+      {/* Earth lights itself in-shader from SUN_DIRECTION; the ambient
+          only keeps any future standard-material props readable */}
+      <ambientLight intensity={0.15} />
+      <group position={EARTH_POS.toArray()}>
         <Earth />
       </group>
     </>
