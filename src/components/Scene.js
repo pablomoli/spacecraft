@@ -312,6 +312,63 @@ function Meteor() {
   );
 }
 
+
+// A small satellite on an inclined low orbit: crosses the hero's disc
+// every ~50s with a faint glow, a nod to the surveying origin story
+function Satellite() {
+  const groupRef = useRef(null);
+
+  const glowMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexShader: `
+          void main() {
+            vec4 mv = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+            gl_PointSize = clamp(500.0 / -mv.z, 5.0, 22.0);
+            gl_Position = projectionMatrix * mv;
+          }
+        `,
+        fragmentShader: `
+          void main() {
+            float d = length(gl_PointCoord - 0.5);
+            float core = smoothstep(0.16, 0.03, d);
+            float glow = smoothstep(0.5, 0.1, d) * 0.35;
+            gl_FragColor = vec4(vec3(1.0, 0.98, 0.9), core + glow);
+          }
+        `,
+      }),
+    [],
+  );
+
+  const pointGeometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0], 3));
+    return g;
+  }, []);
+
+  useFrame(({ clock }) => {
+    const g = groupRef.current;
+    if (!g) return;
+    const u = clock.elapsedTime * 0.13;
+    const r = 3.55;
+    const incl = 0.6;
+    g.position.set(
+      EARTH_POS.x + Math.cos(u) * r,
+      EARTH_POS.y + Math.sin(u) * Math.sin(incl) * r,
+      EARTH_POS.z + Math.sin(u) * Math.cos(incl) * r,
+    );
+  });
+
+  return (
+    <group ref={groupRef}>
+      <points geometry={pointGeometry} material={glowMaterial} frustumCulled={false} />
+    </group>
+  );
+}
+
 function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   const { camera } = useThree();
   // Section boundaries as fractions of the normal scroll span, measured
@@ -386,6 +443,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
       <Moon />
       <ParallaxStars />
       <Meteor />
+      <Satellite />
     </>
   );
 }
