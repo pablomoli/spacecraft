@@ -45,7 +45,7 @@ const surfaceFragment = /* glsl */ `
     vec3 night = texture2D(nightMap, vUv).rgb;
     // 0.012 uv/s crosses the visible face in ~40s: alive at a glance,
     // still stately; 0.0035 took 2.5 minutes and read as frozen
-    float cloud = texture2D(cloudMap, vec2(vUv.x + time * 0.012, vUv.y)).r;
+    float cloud = texture2D(cloudMap, vec2(vUv.x - time * 0.012, vUv.y)).r;
 
     vec3 surf = day * (0.05 + 0.95 * dayF);
 
@@ -64,6 +64,9 @@ const surfaceFragment = /* glsl */ `
     float fres = pow(1.0 - max(dot(n, v), 0.0), 4.5);
     vec3 atmo = mix(vec3(0.10, 0.20, 0.45), vec3(0.35, 0.62, 1.0), dayF);
     surf += atmo * fres * 0.7;
+
+    // bloom used to carry this brightness; opt-in now, so the shader does
+    surf *= 1.15;
 
     gl_FragColor = vec4(surf, 1.0);
   }

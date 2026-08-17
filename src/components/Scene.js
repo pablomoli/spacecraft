@@ -125,6 +125,70 @@ function Moon() {
   );
 }
 
+
+// In-scene stars: the OGL galaxy behind the canvas is screen-space and
+// cannot parallax, so these two world-space shells are what make the
+// camera shots read as travel. Deterministic seed keeps SSR/CSR stable.
+function ParallaxStars() {
+  const geometry = useMemo(() => {
+    let seed = 42;
+    const rand = () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+    const positions = [];
+    const sizes = [];
+    const shells = [
+      { count: 900, radius: 24, jitter: 6, size: 0.09 },
+      { count: 600, radius: 48, jitter: 10, size: 0.16 },
+    ];
+    shells.forEach(({ count, radius, jitter, size }) => {
+      for (let i = 0; i < count; i++) {
+        const u = rand() * 2 - 1;
+        const theta = rand() * Math.PI * 2;
+        const r = radius + rand() * jitter;
+        const s = Math.sqrt(1 - u * u);
+        positions.push(s * Math.cos(theta) * r, u * r, s * Math.sin(theta) * r);
+        sizes.push(size * (0.5 + rand()));
+      }
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute("aSize", new THREE.Float32BufferAttribute(sizes, 1));
+    return geo;
+  }, []);
+
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexShader: `
+          attribute float aSize;
+          varying float vSize;
+          void main() {
+            vSize = aSize;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = aSize * 300.0 / -mv.z;
+            gl_Position = projectionMatrix * mv;
+          }
+        `,
+        fragmentShader: `
+          varying float vSize;
+          void main() {
+            float d = length(gl_PointCoord - 0.5);
+            float a = smoothstep(0.5, 0.1, d);
+            gl_FragColor = vec4(vec3(0.85, 0.88, 1.0), a * 0.55);
+          }
+        `,
+      }),
+    [],
+  );
+
+  return <points geometry={geometry} material={material} />;
+}
+
 function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   const { camera } = useThree();
   // Section boundaries as fractions of the normal scroll span, measured
@@ -197,6 +261,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
         <Earth />
       </group>
       <Moon />
+      <ParallaxStars />
     </>
   );
 }
