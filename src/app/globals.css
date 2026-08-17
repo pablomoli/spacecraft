@@ -1692,8 +1692,12 @@ body::before {
   transform: translateY(-2px);
 }
 
+/* Fixed-height figure box: letterboxed contain, never warped or cropped */
 .exp-card-figure {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 190px;
   background: #000;
   border: 1px solid var(--frame);
   margin-bottom: 0.9rem;
@@ -1702,7 +1706,8 @@ body::before {
 .exp-card-figure img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
 }
 
 .exp-card-kicker {

@@ -5,17 +5,17 @@ import { experiments } from "../../content/experiments";
 export const metadata = {
   title: "Experiments",
   description:
-    "Five short writeups from a measured experiment record on a personal knowledge base.",
+    "Writeups from the experiment record of ytk, a personal knowledge system.",
 };
 
 export default function ExperimentsIndex() {
   return (
     <RecordShell>
-      <p className="record-kicker">The experiment record</p>
-      <h1 className="record-title">Five experiments, short form</h1>
+      <p className="record-kicker">ytk</p>
+      <h1 className="record-title">The experiment record</h1>
       <p className="record-lede">
-        Teasers for the full sections on GitHub. Each one is a question, a
-        method, and a measured answer.
+        Experiments on my own knowledge system. Each writeup starts plain
+        and goes deep; the full sections live on GitHub.
       </p>
       <div className="exp-grid">
         {experiments.map((e) => (
