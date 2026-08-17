@@ -257,49 +257,36 @@ const hackathons = [
 
 const projects = [
   {
-    id: "atlas",
-    name: "Atlas",
-    tech: "Leaflet.js, JavaScript, HTML/CSS",
-    period: "JUN 2025 - PRESENT",
-    image: "/images/epicmap-webapp.webp",
+    id: "ytk",
+    name: "ytk",
+    tech: "Python, SQLite, embeddings, SAEs, Three.js",
+    period: "2026 - PRESENT",
     description:
-      "Mobile-first field service frontend for real-time data access across 1,000+ job sites in 5 Florida counties",
+      "A personal knowledge system treated as a lab: everything I save becomes searchable, mapped, and measured",
     highlights: [
-      "Developed a mobile-first Leaflet.js map interface for real-time field data access across 1,000+ job sites in 5 Florida counties",
-      "Architected a modular frontend with 61 JavaScript modules organized by feature domain (map, admin, route planner)",
-      "Built a route planning system with GPS integration, stop management, and visualization for field crews",
+      "40+ numbered experiments on the production corpus, from embedding geometry to a native sparse autoencoder, published with figures and corrections",
+      "Retrieval eval gate runs before every commit: 156 frozen queries with known answers; regressions fail the build",
+      "The corpus rendered as an explorable galaxy, with coastlines drawn by measured nulls instead of by eye",
+    ],
+    links: {
+      github: "https://github.com/pablomoli/ytk",
+    },
+  },
+  {
+    id: "epicmap",
+    name: "EpicMap",
+    tech: "Leaflet.js, Flask, PostgreSQL/PostGIS, S3, Docker",
+    period: "JUN 2025 - PRESENT",
+    description:
+      "Full-stack field service platform for a land surveying company: map frontend, geospatial API, and self-hosted document storage",
+    highlights: [
+      "Mobile-first Leaflet.js map interface for real-time field data across 1,000+ job sites in 5 Florida counties",
+      "Flask REST API with 50+ endpoints spanning geocoding, job management, crew scheduling, and PostGIS geospatial queries, integrating county ArcGIS, Google Maps, and FEMA flood zone services",
+      "Self-hosted S3-compatible document storage on a Synology NAS, with health monitoring on the platform status page",
     ],
     links: {
       link: "https://www.linkedin.com/posts/pablo-molina-ro_took-some-time-off-from-designing-my-own-activity-7332954345124069376-gUdu?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAADmSf2MBODRgI29MSI00ULMirsuoP2iKSUk",
     },
-  },
-  {
-    id: "meridian",
-    name: "Meridian",
-    tech: "Flask, PostgreSQL, PostGIS, REST API",
-    period: "JUN 2025 - PRESENT",
-    image: "/images/epicmap-api.webp",
-    description:
-      "Backend services powering the EpicMap platform with 50+ endpoints spanning geocoding, job management, and geospatial queries",
-    highlights: [
-      "Architected a Flask REST API with 50+ endpoints spanning geocoding, job management, crew scheduling, and mileage tracking",
-      "Integrated county ArcGIS REST services, Google Maps, and FEMA flood zone APIs for multi-county parcel geocoding",
-      "Built PostGIS-powered geospatial queries for location-based filtering and parcel boundary analysis",
-    ],
-  },
-  {
-    id: "vault",
-    name: "Vault",
-    tech: "Synology NAS, S3, Docker",
-    period: "JUN 2025 - PRESENT",
-    image: "/images/epicmap-storage.webp",
-    description:
-      "Self-hosted document infrastructure for the EpicMap platform with S3-compatible storage and health monitoring",
-    highlights: [
-      "Deployed self-hosted document storage on Synology NAS using Garage with boto3 over the S3 protocol",
-      "Integrated file management into the API for field team document uploads and retrieval",
-      "Built health monitoring for NAS connectivity on the platform's status page",
-    ],
   },
   {
     id: "space-portfolio",
