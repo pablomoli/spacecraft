@@ -1989,3 +1989,16 @@ body::before {
   color: var(--text);
   border-color: var(--muted);
 }
+
+/* External section cards: same anatomy, marked as leaving the site */
+.exp-card--external::before {
+  background: var(--muted);
+}
+
+.exp-card-ext {
+  color: var(--muted);
+  border: 1px solid var(--frame);
+  padding: 0.05rem 0.4rem;
+  margin-left: 0.5rem;
+  letter-spacing: 0.1em;
+}
