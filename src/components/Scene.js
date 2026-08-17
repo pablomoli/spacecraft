@@ -109,10 +109,11 @@ function Moon() {
           vec3 n = normalize(vWorldNormal);
           float ndl = max(dot(n, normalize(sunDir)), 0.0);
           vec3 albedo = texture2D(moonMap, vUv).rgb;
-          vec3 col = albedo * (0.05 + 0.95 * ndl);
-          float rim = pow(1.0 - max(dot(n, normalize(vViewDir)), 0.0), 4.0);
-          col += vec3(0.25, 0.3, 0.42) * rim * 0.2;
-          gl_FragColor = vec4(col, 1.0);
+          vec3 sunColor = vec3(1.0, 0.93, 0.82);
+          vec3 col = albedo * (sunColor * ndl * 1.1 + vec3(0.5, 0.58, 0.8) * 0.22);
+          float rim = pow(1.0 - max(dot(n, normalize(vViewDir)), 0.0), 3.0);
+          col += vec3(0.45, 0.55, 0.8) * rim * 0.35;
+          gl_FragColor = vec4(col * 1.25, 1.0);
         }
       `,
     });
@@ -170,7 +171,7 @@ function ParallaxStars() {
           void main() {
             vSize = aSize;
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = aSize * 300.0 / -mv.z;
+            gl_PointSize = aSize * 1400.0 / -mv.z;
             gl_Position = projectionMatrix * mv;
           }
         `,
@@ -178,8 +179,8 @@ function ParallaxStars() {
           varying float vSize;
           void main() {
             float d = length(gl_PointCoord - 0.5);
-            float a = smoothstep(0.5, 0.1, d);
-            gl_FragColor = vec4(vec3(0.85, 0.88, 1.0), a * 0.55);
+            float a = smoothstep(0.5, 0.05, d);
+            gl_FragColor = vec4(vec3(0.9, 0.92, 1.0), a * 0.85);
           }
         `,
       }),

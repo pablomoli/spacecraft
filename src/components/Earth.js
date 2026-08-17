@@ -47,7 +47,11 @@ const surfaceFragment = /* glsl */ `
     // still stately; 0.0035 took 2.5 minutes and read as frozen
     float cloud = texture2D(cloudMap, vec2(vUv.x - time * 0.012, vUv.y)).r;
 
-    vec3 surf = day * (0.05 + 0.95 * dayF);
+    // Warm key light, cool space fill: the dark side stays legible blue
+    // instead of dropping to black
+    vec3 sunColor = vec3(1.0, 0.93, 0.82);
+    vec3 fill = vec3(0.45, 0.55, 0.8);
+    vec3 surf = day * (sunColor * dayF * 0.95 + fill * 0.17);
 
     float water = clamp((day.b - max(day.r, day.g)) * 5.0, 0.0, 1.0);
     vec3 glintDir = reflect(-normalize(sunDir), n);
