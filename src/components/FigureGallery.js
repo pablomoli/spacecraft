@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { CloseIcon } from "./Icons";
 
 // Figure stack with click-to-expand: clicking a figure opens it near
 // full-viewport with its caption; Esc, backdrop or the button close it.
@@ -44,7 +45,7 @@ export default function FigureGallery({ figures }) {
             <figcaption>{figures[open].caption}</figcaption>
           </figure>
           <button type="button" className="lightbox-close" onClick={close} aria-label="Close">
-            esc
+            <CloseIcon size={16} />
           </button>
         </div>
       )}

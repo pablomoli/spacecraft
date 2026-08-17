@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import TextPressure from "./TextPressure";
 import Link from "next/link";
 import { experiments } from "../content/experiments";
+import { CopyIcon, CheckIcon } from "./Icons";
 
 // GSAP Glitch Subtitle Component
 function GlitchSubtitle() {
@@ -693,8 +694,14 @@ function ContactEmail({ email }) {
   return (
     <div className="contact-email-row">
       <span className="contact-email">{email}</span>
-      <button type="button" className="copy-email-button" onClick={copy}>
-        {copied ? "copied" : "copy"}
+      <button
+        type="button"
+        className="copy-email-button"
+        onClick={copy}
+        aria-label={copied ? "Copied" : "Copy email address"}
+        title="Copy email address"
+      >
+        {copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
       </button>
     </div>
   );

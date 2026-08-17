@@ -1,6 +1,7 @@
 import Link from "next/link";
 import RecordShell from "../../components/RecordShell";
 import { experiments, externalSections } from "../../content/experiments";
+import { GitHubIcon } from "../../components/Icons";
 
 export const metadata = {
   title: "Experiments",
@@ -36,7 +37,10 @@ export default function ExperimentsIndex() {
                   <img src={e.card} alt={e.title} loading="lazy" />
                 </span>
                 <span className="exp-card-kicker">
-                  Experiment {e.number} <span className="exp-card-ext">GitHub</span>
+                  Experiment {e.number}
+                  <span className="exp-card-ext" aria-label="Opens the section on GitHub">
+                    <GitHubIcon size={13} />
+                  </span>
                 </span>
                 <span className="exp-card-title">{e.title}</span>
                 <span className="exp-card-hook">{e.hook}</span>

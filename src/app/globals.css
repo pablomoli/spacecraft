@@ -1387,14 +1387,13 @@ body::before {
 }
 
 .copy-email-button {
-  font-family: var(--font-mono-stack);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--muted);
   background: none;
   border: 1px solid var(--frame);
-  padding: 0.35rem 0.8rem;
+  padding: 0.4rem 0.55rem;
   cursor: pointer;
   transition: color var(--t-micro) var(--ease-quick),
     border-color var(--t-micro) var(--ease-quick);
@@ -1974,14 +1973,13 @@ body::before {
   position: fixed;
   top: 1.25rem;
   right: 1.5rem;
-  font-family: var(--font-mono-stack);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--muted);
   background: none;
   border: 1px solid var(--frame);
-  padding: 0.4rem 0.9rem;
+  padding: 0.5rem;
   cursor: pointer;
 }
 
@@ -1996,9 +1994,9 @@ body::before {
 }
 
 .exp-card-ext {
+  display: inline-flex;
+  align-items: center;
   color: var(--muted);
-  border: 1px solid var(--frame);
-  padding: 0.05rem 0.4rem;
   margin-left: 0.5rem;
-  letter-spacing: 0.1em;
+  vertical-align: text-bottom;
 }
