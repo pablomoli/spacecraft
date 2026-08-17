@@ -47,7 +47,7 @@ export default function HowIWork() {
             before anyone else has to.
           </p>
           <p>
-            The five writeups on this site went through the same wringer.
+            The writeups on this site went through the same wringer.
             Where a number did not survive, the correction ships with the
             claim.
           </p>
