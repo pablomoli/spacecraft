@@ -1,5 +1,4 @@
 import RecordShell from "../../components/RecordShell";
-import { DraftNotice } from "../../components/Prose";
 
 export const metadata = {
   title: "How I work",
@@ -11,7 +10,6 @@ export default function HowIWork() {
   return (
     <RecordShell>
       <article className="record-article">
-        <DraftNotice />
         <p className="record-kicker">How I work</p>
         <h1 className="record-title">The win I had to take back</h1>
         <div className="record-prose">

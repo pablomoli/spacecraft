@@ -176,9 +176,12 @@ export default function Earth() {
 
     const createTexture = (imageBitmap) => {
       const tex = new THREE.CanvasTexture(imageBitmap);
-      tex.generateMipmaps = false;
-      tex.minFilter = THREE.LinearFilter;
+      // No mip chain made the rotating surface shimmer: high-frequency
+      // detail (city lights, clouds) aliases per-frame without one
+      tex.generateMipmaps = true;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
       tex.magFilter = THREE.LinearFilter;
+      tex.anisotropy = 4;
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
       tex.colorSpace = THREE.SRGBColorSpace;
       loaded.push(tex);

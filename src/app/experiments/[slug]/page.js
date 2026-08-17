@@ -1,7 +1,7 @@
 import Link from "next/link";
 import RecordShell from "../../../components/RecordShell";
 import { experiments, getExperiment } from "../../../content/experiments";
-import { Prose, Footnotes, DraftNotice } from "../../../components/Prose";
+import { Prose, Footnotes } from "../../../components/Prose";
 
 export function generateStaticParams() {
   return experiments.map((e) => ({ slug: e.slug }));
@@ -22,7 +22,6 @@ export default async function ExperimentPage({ params }) {
   return (
     <RecordShell>
       <article className="record-article has-figure">
-        {e.draft && <DraftNotice />}
         <p className="record-kicker">Experiment {e.number}</p>
         <h1 className="record-title">{e.title}</h1>
         <div className="record-prose">

@@ -867,14 +867,9 @@ function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
                   {title}
                   <GlitchSubtitle />
                   <p className="description">{section.description}</p>
-                  {section.draft && <p className="draft-tag hero-draft">draft copy</p>}
                 </>
               ) : (
                 <div className="section-panel">
-                  <p className="panel-kicker">
-                    {String(sectionIndex).padStart(2, "0")} / {section.id.toUpperCase()}
-                    {section.draft && <span className="draft-tag">draft copy</span>}
-                  </p>
                   {title}
                   {section.subtitle && <p className="subtitle">{section.subtitle}</p>}
                   {section.description && <p className="description">{section.description}</p>}
