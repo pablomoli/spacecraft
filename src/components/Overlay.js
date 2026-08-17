@@ -19,77 +19,43 @@ function GlitchSubtitle() {
   const redRef = useRef(null);
   const blueRef = useRef(null);
 
+  // Motion budget: the glitch fires once on arrival; after that the
+  // rotation is a clean 200ms crossfade. Nothing jitters while reading.
   useEffect(() => {
-    const tl = gsap.timeline({ repeat: -1 });
+    const tl = gsap.timeline();
+    tl.set([textRef.current, redRef.current, blueRef.current], { opacity: 1 })
+      .fromTo(textRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" })
+      .to([redRef.current, blueRef.current], {
+        duration: 0.12,
+        x: () => gsap.utils.random(-4, 4),
+        y: () => gsap.utils.random(-2, 2),
+        ease: "none",
+      })
+      .to([redRef.current, blueRef.current], {
+        duration: 0.18,
+        x: 0,
+        y: 0,
+        ease: "power2.out",
+      });
 
-    subtitles.forEach((_, index) => {
-      if (index === 0) {
-        // First subtitle - fade in
-        tl.set([textRef.current, redRef.current, blueRef.current], {
-          opacity: 1,
-        }).fromTo(
-          textRef.current,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.5, ease: "power2.out" },
-        );
-      } else {
-        // Quick glitch sequence before changing text
-        tl.to([redRef.current, blueRef.current], {
-          duration: 0.4,
-          x: () => gsap.utils.random(-3, 3),
-          y: () => gsap.utils.random(-3, 3),
-          ease: "none",
-        })
-          .to([redRef.current, blueRef.current], {
-            duration: 0.4,
-            x: () => gsap.utils.random(-5, 5),
-            y: () => gsap.utils.random(-3, 3),
-            ease: "none",
-          })
-          .to([redRef.current, blueRef.current], {
-            duration: 0.2,
-            x: 0,
-            y: 0,
-            ease: "power2.out",
-            onComplete: () => setCurrentIndex(index),
-          });
-      }
-
-      // Hold for 5 seconds
-      if (index < subtitles.length - 1) {
-        tl.to({}, { duration: 5 });
-      }
-    });
+    const rotate = setInterval(() => {
+      const layers = [textRef.current, redRef.current, blueRef.current];
+      gsap.to(layers, {
+        opacity: 0,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete: () => {
+          setCurrentIndex((i) => (i + 1) % subtitles.length);
+          gsap.to(layers, { opacity: 1, duration: 0.2, ease: "power2.out" });
+        },
+      });
+    }, 5000);
 
     return () => {
       tl.kill();
+      clearInterval(rotate);
     };
   }, [subtitles]);
-
-  // Random glitch effect every few seconds
-  useEffect(() => {
-    const randomGlitch = () => {
-      if (redRef.current && blueRef.current) {
-        gsap.to([redRef.current, blueRef.current], {
-          duration: 0.1,
-          x: () => gsap.utils.random(-2, 2),
-          y: () => gsap.utils.random(-1, 1),
-          ease: "none",
-          onComplete: () => {
-            gsap.to([redRef.current, blueRef.current], {
-              duration: 0.2,
-              x: 0,
-              y: 0,
-              ease: "power2.out",
-            });
-          },
-        });
-      }
-    };
-
-    const interval = setInterval(randomGlitch, gsap.utils.random(8000, 15000));
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="glitch-container">
@@ -336,17 +302,17 @@ function ProjectsSection() {
       {
         x: 0,
         opacity: 1,
-        duration: 0.5,
-        stagger: 0.08,
+        duration: 0.35,
+        stagger: 0.06,
         ease: "power2.out",
-        delay: 0.2
+        delay: 0.1
       }
     );
 
     if (contentRef.current) {
       gsap.fromTo(contentRef.current,
         { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out", delay: 0.4 }
+        { y: 0, opacity: 1, duration: 0.4, ease: "power2.out", delay: 0.2 }
       );
     }
 
@@ -356,10 +322,10 @@ function ProjectsSection() {
         x: 0,
         opacity: 1,
         scale: 1,
-        duration: 0.4,
-        stagger: 0.1,
+        duration: 0.3,
+        stagger: 0.06,
         ease: "back.out(1.2)",
-        delay: 0.6
+        delay: 0.3
       }
     );
   }, []);
@@ -484,7 +450,7 @@ function ProjectsSection() {
           {
             opacity: 1,
             x: 0,
-            duration: 0.3,
+            duration: 0.25,
             ease: "power2.out",
             onComplete: () => {
               gsap.fromTo(highlightRefs.current.filter(Boolean),
@@ -493,8 +459,8 @@ function ProjectsSection() {
                   x: 0,
                   opacity: 1,
                   scale: 1,
-                  duration: 0.4,
-                  stagger: 0.08,
+                  duration: 0.25,
+                  stagger: 0.05,
                   ease: "back.out(1.2)",
                   onComplete: () => setIsTransitioning(false)
                 }
@@ -740,6 +706,27 @@ function ContactEmail({ email }) {
 
 function Overlay({ scrollData, style, lenisRef, scrollContainerRef, ref }) {
   const isAnimatingRef = useRef(false);
+
+  // One-time panel entrance: pre-enter is added by JS (no-JS users never
+  // get hidden content), the observer flips to entered on first reveal
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const panels = document.querySelectorAll(".section-panel, .exp-rail-head");
+    panels.forEach((el) => el.classList.add("pre-enter"));
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("entered");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.2 },
+    );
+    panels.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
   const animationTimeoutRef = useRef(null);
   const scrollAtBottomTimeoutRef = useRef(null);
   const hasTriggeredRef = useRef(false);

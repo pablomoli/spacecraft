@@ -685,7 +685,17 @@ export default function Home() {
           zIndex: 100,
         }}
       >
-        <NavBar currentSection={scrollData.currentSection} />
+        <NavBar
+          currentSection={scrollData.currentSection}
+          onNavigate={(sectionId) => {
+            const el = document.getElementById(sectionId);
+            if (!el) return;
+            lenisRef.current?.scrollTo(el.offsetTop, {
+              duration: 1.4,
+              easing: (t) => 1 - Math.pow(1 - t, 4),
+            });
+          }}
+        />
         <MagneticSocialLinks />
       </div>
 

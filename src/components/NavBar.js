@@ -9,9 +9,13 @@ const sections = [
   { id: "contact", name: "Contact" },
 ];
 
-function NavBar({ currentSection }) {
+function NavBar({ currentSection, onNavigate }) {
   const handleSectionClick = (sectionId) => {
-    window.location.hash = `#${sectionId}`;
+    if (onNavigate) {
+      onNavigate(sectionId);
+    } else {
+      window.location.hash = `#${sectionId}`;
+    }
   };
 
   return (

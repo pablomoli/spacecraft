@@ -928,7 +928,7 @@ body::before {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.4s ease;
+  transition: transform 0.2s ease;
 }
 
 .project-image:hover {
@@ -1879,4 +1879,17 @@ body::before {
   .exp-rail-progress {
     display: none;
   }
+}
+
+/* One-time panel entrance; .pre-enter is JS-applied so content is never
+   hidden without JS, and reduced-motion never adds it */
+.pre-enter {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.pre-enter.entered {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 240ms var(--ease-quick), transform 240ms var(--ease-quick);
 }
