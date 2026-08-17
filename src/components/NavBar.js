@@ -3,8 +3,8 @@ import React from "react";
 const sections = [
   { id: "hero", name: "Home" },
   { id: "about", name: "About" },
-  { id: "technologies", name: "Skills" },
   { id: "projects", name: "Projects" },
+  { id: "experiments", name: "Experiments" },
   { id: "hackathons", name: "Hackathons" },
   { id: "contact", name: "Contact" },
 ];

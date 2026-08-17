@@ -4,14 +4,17 @@
 
 const RECORD = 'https://github.com/pablomoli/ytk/tree/master/docs/assets';
 
-export const writeups = [
+export const experiments = [
   {
     slug: 'coastlines',
+    hook:
+      'Where does a knowledge base end? Drawing the border with a yardstick instead of an eye.',
     number: '30',
     title: 'My notes have a coastline',
     draft: true,
     figure: {
-      src: '/images/writeups/coastlines-named-continents.png',
+      src: '/images/experiments/coastlines-named-continents.png',
+      card: '/images/experiments/card-coastlines-named-continents.webp',
       alt: 'The knowledge base rendered as a world map with 27 named continents on a dark sphere',
     },
     sectionUrl: `${RECORD}/30-coastlines`,
@@ -29,11 +32,14 @@ export const writeups = [
   },
   {
     slug: 'the-cone',
+    hook:
+      'Every note pointed the same way. Most similarity was a shared lean carrying no information.',
     number: '12',
     title: 'Every note points the same way',
     draft: true,
     figure: {
-      src: '/images/writeups/the-cone.png',
+      src: '/images/experiments/the-cone.png',
+      card: '/images/experiments/card-the-cone.webp',
       alt: 'Observed embedding directions forming a narrow cone against an isotropic null',
     },
     sectionUrl: `${RECORD}/12-embedding-geometry`,
@@ -49,11 +55,14 @@ export const writeups = [
   },
   {
     slug: 'native-sae',
+    hook:
+      'A sparse autoencoder that names real threads in the corpus, and honestly fails the retrieval gate.',
     number: '24',
     title: 'Teaching my search index to explain itself',
     draft: true,
     figure: {
-      src: '/images/writeups/native-sae-latents.png',
+      src: '/images/experiments/native-sae-latents.png',
+      card: '/images/experiments/card-native-sae-latents.webp',
       alt: 'Named sparse autoencoder latents recovered from production embeddings',
     },
     sectionUrl: `${RECORD}/24-native-sae`,
@@ -69,11 +78,14 @@ export const writeups = [
   },
   {
     slug: 'eval-gate',
+    hook:
+      'A quality alarm that fired on growth was retrained to fire only on breakage. Then sabotaged, to prove it.',
     number: '08',
     title: 'The alarm that cried wolf every day',
     draft: true,
     figure: {
-      src: '/images/writeups/eval-gate-verdicts.png',
+      src: '/images/experiments/eval-gate-verdicts.png',
+      card: '/images/experiments/card-eval-gate-verdicts.webp',
       alt: 'Gate verdicts over time: growth passes after the freeze, an injected regression still fails',
     },
     sectionUrl: `${RECORD}/08-eval-gate-freeze`,
@@ -87,11 +99,14 @@ export const writeups = [
   },
   {
     slug: 'reuse-ladder',
+    hook:
+      'Does saved knowledge ever come back? Yes, through a channel built by accident.',
     number: '40',
     title: 'Does my second brain pay rent',
     draft: true,
     figure: {
-      src: '/images/writeups/reuse-ladder.png',
+      src: '/images/experiments/reuse-ladder.png',
+      card: '/images/experiments/card-reuse-ladder.webp',
       alt: 'Evidence ladder from notes that merely exist to notes explicitly cited in shipped work',
     },
     sectionUrl: `${RECORD}/40-reuse-ladder`,
@@ -105,6 +120,6 @@ export const writeups = [
   },
 ];
 
-export function getWriteup(slug) {
-  return writeups.find((w) => w.slug === slug);
+export function getExperiment(slug) {
+  return experiments.find((w) => w.slug === slug);
 }

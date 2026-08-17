@@ -1409,3 +1409,438 @@ body::before {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* ================================================================
+   Record pages (/experiments, /how-i-work): outside the journey.
+   Body is position:fixed for the journey scroller, so these pages
+   scroll inside .record-page. Gold accent = the experiment record.
+   ================================================================ */
+
+.record-page {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--text);
+  user-select: text;
+  z-index: 10;
+}
+
+.record-header,
+.record-footer {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.25rem;
+  font-family: var(--font-mono-stack);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.record-header {
+  border-bottom: 1px solid var(--frame);
+}
+
+.record-header nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.record-header a,
+.record-footer a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--t-micro) var(--ease-quick);
+}
+
+.record-header a:hover,
+.record-footer a:hover {
+  color: var(--gold);
+}
+
+.record-back {
+  color: var(--text) !important;
+}
+
+.record-footer {
+  border-top: 1px solid var(--frame);
+  color: var(--muted);
+  margin-top: 3rem;
+}
+
+.record-main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 1rem;
+}
+
+.record-kicker {
+  font-family: var(--font-mono-stack);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.9rem;
+}
+
+.record-title {
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+
+.record-lede {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 55ch;
+  margin-bottom: 2.5rem;
+}
+
+/* Long-form prose wears the record's face */
+.record-prose {
+  font-family: var(--font-cmu), Georgia, serif;
+  font-size: 1.13rem;
+  line-height: 1.65;
+}
+
+.record-prose p {
+  margin-bottom: 1.1rem;
+  max-width: 62ch;
+}
+
+.record-prose sup a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.record-article .draft-notice {
+  border: 1px solid var(--frame);
+  border-left: 3px solid var(--gold);
+  color: var(--muted);
+  font-family: var(--font-mono-stack);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.record-figure {
+  margin: 2rem 0 1rem;
+  border: 1px solid var(--frame);
+  background: #000;
+  padding: 0.5rem;
+}
+
+.record-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.record-figure figcaption {
+  color: var(--muted);
+  font-family: var(--font-mono-stack);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  padding: 0.6rem 0.4rem 0.2rem;
+}
+
+.record-section-link {
+  display: inline-block;
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(242, 185, 80, 0.35);
+  margin: 0.5rem 0 1.5rem;
+}
+
+.record-section-link:hover {
+  border-bottom-color: var(--gold);
+}
+
+.record-prose .footnotes {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  padding-left: 1.2rem;
+  border-top: 1px solid var(--frame);
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.record-prose .footnotes li {
+  margin-bottom: 0.6rem;
+}
+
+.record-prose .footnotes a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.record-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-top: 1px solid var(--frame);
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  font-family: var(--font-mono-stack);
+  font-size: 0.8rem;
+}
+
+.record-pager a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.record-pager a:hover {
+  color: var(--gold);
+}
+
+.record-aside {
+  margin-top: 2.5rem;
+  color: var(--muted);
+}
+
+.record-aside a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+/* Experiment cards: shared by the /experiments index grid and the
+   journey gallery */
+.exp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.exp-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-surface);
+  border: 1px solid var(--frame);
+  text-decoration: none;
+  color: var(--text);
+  padding: 0.6rem 0.6rem 1rem;
+  position: relative;
+  transition: border-color var(--t-micro) var(--ease-quick),
+    transform var(--t-micro) var(--ease-quick);
+}
+
+.exp-card::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 28px;
+  height: 2px;
+  background: var(--gold);
+}
+
+.exp-card:hover {
+  border-color: rgba(242, 185, 80, 0.5);
+  transform: translateY(-2px);
+}
+
+.exp-card-figure {
+  display: block;
+  background: #000;
+  border: 1px solid var(--frame);
+  margin-bottom: 0.9rem;
+}
+
+.exp-card-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.exp-card-kicker {
+  font-family: var(--font-mono-stack);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 0 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.exp-card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.exp-card-hook {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding: 0 0.4rem;
+}
+
+@media (max-width: 768px) {
+  .record-title {
+    font-size: 1.8rem;
+  }
+}
+
+/* Experiments rail: 500vh section, sticky .dot pins the viewport-high
+   rail while scroll scrubs the track horizontally */
+.section.exp-section {
+  height: 500vh;
+}
+
+.section.exp-section .dot,
+.section:nth-child(even) .dot.dot--rail,
+.section:nth-child(odd) .dot.dot--rail {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  align-items: stretch;
+  text-align: left;
+}
+
+.exp-rail-wrap {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding-left: 90px;
+}
+
+.exp-rail-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-right: 90px;
+  margin-bottom: 2rem;
+}
+
+.exp-rail-kicker {
+  color: var(--gold);
+  margin-bottom: 0.6rem;
+}
+
+.exp-rail-title {
+  color: var(--text);
+  font-size: 2.2em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0 0 0.4rem 0;
+  text-shadow: none;
+}
+
+.exp-rail-sub {
+  color: var(--muted);
+  font-size: 0.95rem;
+  max-width: 48ch;
+}
+
+.exp-rail-viewall {
+  font-family: var(--font-mono-stack);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--frame);
+  padding: 0.45rem 0.9rem;
+  white-space: nowrap;
+  transition: color var(--t-micro) var(--ease-quick),
+    border-color var(--t-micro) var(--ease-quick);
+}
+
+.exp-rail-viewall:hover {
+  color: var(--gold);
+  border-color: rgba(242, 185, 80, 0.5);
+}
+
+.exp-rail {
+  display: flex;
+  gap: 1.5rem;
+  will-change: transform;
+  padding-right: 40vw;
+}
+
+.exp-card--rail {
+  flex: 0 0 clamp(340px, 34vw, 520px);
+}
+
+.exp-rail-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-right: 90px;
+}
+
+.exp-rail-bar-track {
+  display: block;
+  flex: 0 0 220px;
+  height: 2px;
+  background: var(--frame);
+}
+
+.exp-rail-bar {
+  display: block;
+  height: 2px;
+  width: 0;
+  background: var(--gold);
+}
+
+.exp-rail-count {
+  font-family: var(--font-mono-stack);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  /* Rail degrades to a vertical stack of the same cards */
+  .section.exp-section {
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  .exp-rail-wrap {
+    height: auto;
+    padding: 4rem 1.5rem 2rem;
+    overflow: visible;
+  }
+
+  .exp-rail-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-right: 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .exp-rail {
+    flex-direction: column;
+    padding-right: 0;
+    transform: none !important;
+  }
+
+  .exp-card--rail {
+    flex: 1 1 auto;
+  }
+
+  .exp-rail-progress {
+    display: none;
+  }
+}

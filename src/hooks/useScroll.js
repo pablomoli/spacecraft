@@ -7,7 +7,7 @@ export function useScroll() {
   const [scrollPhase, setScrollPhase] = useState('normal'); // 'normal' | 'extra' | 'wormhole'
   const [wormholeTriggered, setWormholeTriggered] = useState(false);
 
-  const sections = useMemo(() => ["hero", "about", "technologies", "projects", "contact"], []);
+  const sections = useMemo(() => ["hero", "about", "projects", "experiments", "hackathons", "contact"], []);
 
   // Handle page refresh - reset if in wormhole state
   useEffect(() => {

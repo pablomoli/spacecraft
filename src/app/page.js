@@ -267,12 +267,20 @@ export default function Home() {
     const extraSectionHeight = extraSection ? extraSection.offsetHeight : 0;
     const extraSectionStart = actualNormalSectionsHeight;
 
+    // Experiments rail interior: section snap must not fight the
+    // horizontal scrub, so record its span for suppression
+    const expIndex = sectionHeights.findIndex((s) => s.id === "experiments");
+    const expStart = expIndex >= 0 ? offsets[expIndex] : -1;
+    const expEnd = expIndex >= 0 ? expStart + sectionHeights[expIndex].height : -1;
+
     // Cache measurements
     heightMeasurements.current = {
       normalSectionsHeight: actualNormalSectionsHeight,
       extraSectionHeight,
       extraSectionStart,
       sectionOffsets: offsets,
+      expStart,
+      expEnd,
       isInitialized: true,
     };
 
@@ -325,11 +333,23 @@ export default function Home() {
     if (isSnappingRef.current) return;
     if (!heightMeasurements.current.isInitialized) return;
 
-    const { sectionOffsets, extraSectionStart } = heightMeasurements.current;
+    const { sectionOffsets, extraSectionStart, expStart, expEnd } =
+      heightMeasurements.current;
     if (sectionOffsets.length === 0) return;
 
     // Skip snap if in extra section territory (wormhole zone)
     if (scrollTop >= extraSectionStart - 100) return;
+
+    // Skip snap inside the experiments rail interior: the vertical
+    // position IS the horizontal scrub position; snapping would yank
+    // the user across cards
+    if (
+      expStart >= 0 &&
+      scrollTop > expStart + window.innerHeight * 0.5 &&
+      scrollTop < expEnd - window.innerHeight * 1.5
+    ) {
+      return;
+    }
 
     // Find nearest section offset
     let nearestIndex = 0;
@@ -410,13 +430,15 @@ export default function Home() {
         scrollData.scrollProgress.current = normalProgress;
         scrollData.extraScrollProgress.current = 0;
 
-        // Calculate section index based on scroll position
-        const sectionHeight = window.innerHeight * 2; // 200vh per section
-        const numSections = 6; // hero, about, technologies, projects, hackathons, contact
-        const currentSectionIndex = Math.min(
-          Math.floor(scrollTop / sectionHeight),
-          numSections - 1,
-        );
+        // Section index from measured offsets (sections are no longer
+        // uniform height: the experiments rail is 500vh)
+        const { sectionOffsets } = heightMeasurements.current;
+        let currentSectionIndex = 0;
+        for (let i = 0; i < sectionOffsets.length; i++) {
+          if (scrollTop >= sectionOffsets[i] - window.innerHeight * 0.5) {
+            currentSectionIndex = i;
+          }
+        }
         scrollData.handleSectionChange(currentSectionIndex);
 
         if (scrollData.scrollPhase !== "normal") {
