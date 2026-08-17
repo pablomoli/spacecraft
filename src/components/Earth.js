@@ -47,6 +47,11 @@ const surfaceFragment = /* glsl */ `
 
     vec3 surf = day * (0.05 + 0.95 * dayF);
 
+    float water = clamp((day.b - max(day.r, day.g)) * 5.0, 0.0, 1.0);
+    vec3 glintDir = reflect(-normalize(sunDir), n);
+    float glint = pow(max(dot(glintDir, v), 0.0), 90.0) * water * dayF;
+    surf += vec3(1.0, 0.95, 0.85) * glint * 0.9;
+
     float term = smoothstep(0.22, 0.0, abs(ndl));
     surf += day * vec3(0.95, 0.45, 0.18) * term * 0.35;
 

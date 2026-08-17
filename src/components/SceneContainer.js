@@ -1,7 +1,8 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useSearchParams } from "next/navigation";
 import WebGLErrorBoundary from "./WebGLErrorBoundary";
 import GalaxyWrapper from "./GalaxyWrapper";
@@ -43,6 +44,12 @@ function SceneContent({
 }) {
   const searchParams = useSearchParams();
   const isLiteMode = searchParams.get("lite") === "1";
+  // Bloom only where it's cheap enough: desktop-class viewport + retina
+  const [bloomEnabled, setBloomEnabled] = useState(false);
+  useEffect(() => {
+    const mem = navigator?.deviceMemory || 8;
+    setBloomEnabled(window.innerWidth > 768 && (window.devicePixelRatio || 1) > 1 && mem >= 8);
+  }, []);
 
   if (isLiteMode) {
     return <StaticFallback />;
@@ -87,6 +94,16 @@ function SceneContent({
             extraScrollProgress={scrollData.extraScrollProgress}
             scrollPhase={scrollData.scrollPhase}
           />
+          {bloomEnabled && (
+            <EffectComposer>
+              <Bloom
+                luminanceThreshold={0.55}
+                intensity={0.45}
+                mipmapBlur
+                radius={0.6}
+              />
+            </EffectComposer>
+          )}
         </Suspense>
       </Canvas>
     </WebGLErrorBoundary>

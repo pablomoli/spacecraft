@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import Earth from "./Earth";
+import Earth, { SUN_DIRECTION } from "./Earth";
 
 const EARTH_POS = new THREE.Vector3(0, 0, -1);
 const UP = new THREE.Vector3(0, 1, 0);
@@ -72,6 +72,44 @@ function applyShot(camera, shot, turn = 0) {
   }
 }
 
+
+// Untextured moon: lambert gray from the same sun, faint cool rim.
+// Positioned for the receded rail shot, the one frame with open sky.
+const moonMaterial = new THREE.ShaderMaterial({
+  uniforms: { sunDir: { value: SUN_DIRECTION.clone() } },
+  vertexShader: `
+    varying vec3 vWorldNormal;
+    varying vec3 vViewDir;
+    void main() {
+      vWorldNormal = normalize(mat3(modelMatrix) * normal);
+      vec4 worldPos = modelMatrix * vec4(position, 1.0);
+      vViewDir = normalize(cameraPosition - worldPos.xyz);
+      gl_Position = projectionMatrix * viewMatrix * worldPos;
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 sunDir;
+    varying vec3 vWorldNormal;
+    varying vec3 vViewDir;
+    void main() {
+      vec3 n = normalize(vWorldNormal);
+      float ndl = max(dot(n, normalize(sunDir)), 0.0);
+      vec3 col = vec3(0.60, 0.61, 0.64) * (0.04 + 0.96 * ndl);
+      float rim = pow(1.0 - max(dot(n, normalize(vViewDir)), 0.0), 4.0);
+      col += vec3(0.25, 0.3, 0.42) * rim * 0.25;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+});
+
+function Moon() {
+  return (
+    <mesh position={[-3.5, 3.0, 3]} material={moonMaterial}>
+      <sphereGeometry args={[0.5, 32, 32]} />
+    </mesh>
+  );
+}
+
 function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   const { camera } = useThree();
   // Section boundaries as fractions of the normal scroll span, measured
@@ -101,11 +139,26 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
     applyShot(camera, KEYS[0]);
   }, [camera]);
 
-  useFrame(() => {
+  const reduceMotionRef = useRef(false);
+  useEffect(() => {
+    reduceMotionRef.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+  }, []);
+
+  useFrame(({ clock }) => {
     if (!scrollProgress) return;
 
     if (scrollPhase === "normal") {
-      applyShot(camera, shotAt(fractionsRef.current, scrollProgress.current));
+      const shot = shotAt(fractionsRef.current, scrollProgress.current);
+      if (!reduceMotionRef.current) {
+        // Idle drift: sub-degree sway so held shots breathe
+        const t = clock.elapsedTime;
+        shot.a += Math.sin(t * 0.1) * 0.0012;
+        shot.r += Math.sin(t * 0.07) * 0.04;
+        shot.earthY += Math.sin(t * 0.13) * 0.008;
+      }
+      applyShot(camera, shot);
     } else if (scrollPhase === "extra" && extraScrollProgress) {
       const extraProgress = extraScrollProgress.current;
       applyShot(camera, KEYS[KEYS.length - 1], extraProgress * (Math.PI / 2));
@@ -128,6 +181,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
       <group position={EARTH_POS.toArray()}>
         <Earth />
       </group>
+      <Moon />
     </>
   );
 }
