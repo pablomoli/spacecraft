@@ -41,6 +41,8 @@ function SceneContent({
   galaxyConfig,
   scrollPhase,
   showUI,
+  warpRef,
+  wormholeProgress,
 }) {
   const searchParams = useSearchParams();
   const isLiteMode = searchParams.get("lite") === "1";
@@ -87,8 +89,22 @@ function SceneContent({
           antialias: false,
         }}
         style={{
-          opacity: showUI ? 1 : 0,
-          transition: "opacity 0.2s ease",
+          // During the wormhole the scene stays up through the charge
+          // (camera accelerating, stars streaking) and crossfades into
+          // the galaxy warp at peak instead of vanishing at t=0
+          opacity:
+            scrollPhase === "wormhole"
+              ? wormholeProgress < 0.14
+                ? 1
+                : wormholeProgress < 0.3
+                  ? 1 - (wormholeProgress - 0.14) / 0.16
+                  : wormholeProgress > 0.96
+                    ? (wormholeProgress - 0.96) / 0.04
+                    : 0
+              : showUI
+                ? 1
+                : 0,
+          transition: "opacity 0.1s linear",
         }}
       >
         <Suspense fallback={<LoadingFallback />}>
@@ -96,6 +112,7 @@ function SceneContent({
             scrollProgress={scrollData.scrollProgress}
             extraScrollProgress={scrollData.extraScrollProgress}
             scrollPhase={scrollData.scrollPhase}
+            warpRef={warpRef}
           />
           {bloomEnabled && bloomOptIn && (
             <EffectComposer>
