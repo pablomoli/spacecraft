@@ -54,9 +54,9 @@ const surfaceFragment = /* glsl */ `
 
     surf += night * vec3(1.0, 0.82, 0.55) * pow(1.0 - dayF, 1.7) * (1.0 - cloud * 0.75) * 1.7;
 
-    float fres = pow(1.0 - max(dot(n, v), 0.0), 2.6);
+    float fres = pow(1.0 - max(dot(n, v), 0.0), 4.5);
     vec3 atmo = mix(vec3(0.10, 0.20, 0.45), vec3(0.35, 0.62, 1.0), dayF);
-    surf += atmo * fres * 1.15;
+    surf += atmo * fres * 0.7;
 
     gl_FragColor = vec4(surf, 1.0);
   }
@@ -84,10 +84,12 @@ const haloFragment = /* glsl */ `
   void main() {
     vec3 n = normalize(vWorldNormal);
     vec3 v = normalize(vViewDir);
-    float rim = pow(1.0 - abs(dot(n, v)), 3.0);
+    float x = 1.0 - abs(dot(n, v));
+    float line = pow(x, 10.0) * 1.3;
+    float scatter = pow(x, 3.5) * 0.18;
     float lit = smoothstep(-0.4, 0.6, dot(n, normalize(sunDir)));
-    vec3 color = mix(vec3(0.08, 0.16, 0.38), vec3(0.35, 0.6, 1.0), lit);
-    gl_FragColor = vec4(color, rim * 0.85);
+    vec3 color = mix(vec3(0.08, 0.16, 0.38), vec3(0.38, 0.64, 1.0), lit);
+    gl_FragColor = vec4(color, line + scatter);
   }
 `;
 
@@ -242,7 +244,7 @@ export default function Earth() {
       <mesh geometry={geo}>
         <primitive object={surfaceMaterial} attach="material" />
       </mesh>
-      <mesh geometry={geo} scale={[1.05, 1.05, 1.05]}>
+      <mesh geometry={geo} scale={[1.022, 1.022, 1.022]}>
         <primitive object={haloMaterial} attach="material" />
       </mesh>
     </group>
