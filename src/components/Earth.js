@@ -43,9 +43,8 @@ const surfaceFragment = /* glsl */ `
 
     vec3 day = texture2D(dayMap, vUv).rgb;
     vec3 night = texture2D(nightMap, vUv).rgb;
-    // 0.012 uv/s crosses the visible face in ~40s: alive at a glance,
-    // still stately; 0.0035 took 2.5 minutes and read as frozen
-    float cloud = texture2D(cloudMap, vec2(vUv.x - time * 0.012, vUv.y)).r;
+    // 0.006 uv/s: alive at a glance without racing (tuned by eye twice)
+    float cloud = texture2D(cloudMap, vec2(vUv.x - time * 0.006, vUv.y)).r;
 
     // Warm key light, cool space fill: the dark side stays legible blue
     // instead of dropping to black

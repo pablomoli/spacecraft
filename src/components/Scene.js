@@ -14,11 +14,11 @@ const UP = new THREE.Vector3(0, 1, 0);
 // space the journey travels day -> terminator -> night -> crescent -> day.
 const KEYS = [
   { a: 0.0, r: 5.2, earthX: 0.0, earthY: -0.1 }, // hero: centered
-  { a: 0.18, r: 4.6, earthX: -0.55, earthY: 0.05 }, // about: panel right
-  { a: 0.38, r: 4.8, earthX: 0.55, earthY: 0.05 }, // projects: panel left
+  { a: 0.18, r: 4.6, earthX: -0.62, earthY: 0.05 }, // about: panel right
+  { a: 0.38, r: 4.8, earthX: 0.62, earthY: 0.05 }, // projects: panel left
   { a: 0.55, r: 9.5, earthX: 0.0, earthY: 0.12 }, // experiments: recede
-  { a: 0.75, r: 4.8, earthX: 0.55, earthY: 0.05 }, // hackathons: panel left
-  { a: 1.0, r: 6.5, earthX: -0.5, earthY: 0.0 }, // contact: panel right
+  { a: 0.75, r: 4.8, earthX: 0.62, earthY: 0.05 }, // hackathons: panel left
+  { a: 1.0, r: 6.5, earthX: -0.56, earthY: 0.0 }, // contact: panel right
 ];
 
 // Hold each shot while the panel is pinned; ease to the next during the
@@ -190,6 +190,128 @@ function ParallaxStars() {
   return <points geometry={geometry} material={material} />;
 }
 
+
+// A meteor: one thin additive streak crossing the far sky, then a long
+// quiet gap. An event, not a texture - most visits see one or two.
+// Built as a camera-facing ribbon: THREE.Line hairlines proved unreliable.
+function Meteor() {
+  const meshRef = useRef(null);
+  const stateRef = useRef(null);
+
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        uniforms: { uAlpha: { value: 0 } },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform float uAlpha;
+          varying vec2 vUv;
+          void main() {
+            float tail = pow(vUv.x, 2.2);
+            float edge = smoothstep(0.0, 0.45, vUv.y) * smoothstep(1.0, 0.55, vUv.y);
+            vec3 color = mix(vec3(0.6, 0.75, 1.0), vec3(1.0), tail);
+            gl_FragColor = vec4(color, tail * edge * uAlpha);
+          }
+        `,
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const debug = new URLSearchParams(window.location.search).has("meteor");
+    stateRef.current = {
+      disabled: reduce,
+      debug,
+      next: debug ? 2 : 14 + Math.random() * 30,
+      active: false,
+      t0: 0,
+      dur: 1.3,
+      from: new THREE.Vector3(),
+      dir: new THREE.Vector3(),
+      mid: new THREE.Vector3(),
+      bx: new THREE.Vector3(),
+      by: new THREE.Vector3(),
+      bz: new THREE.Vector3(),
+      basis: new THREE.Matrix4(),
+    };
+  }, []);
+
+  useFrame(({ clock, camera }) => {
+    const st = stateRef.current;
+    const mesh = meshRef.current;
+    if (!st || st.disabled || !mesh) return;
+    const t = clock.elapsedTime;
+    if (st.debug) {
+      window.__meteor = {
+        t: Math.round(t * 10) / 10,
+        next: Math.round(st.next * 10) / 10,
+        active: st.active,
+        alpha: material.uniforms.uAlpha.value,
+        pos: mesh.position.toArray().map((v) => Math.round(v * 10) / 10),
+        visible: mesh.visible,
+      };
+    }
+
+    if (!st.active && t >= st.next) {
+      if (st.debug) {
+        st.from.set(16, 13, -26);
+        st.dir.set(-0.75, -0.35, 0.1).normalize();
+      } else {
+        const theta = Math.random() * Math.PI * 2;
+        const y = 8 + Math.random() * 14;
+        st.from.set(Math.cos(theta) * 34, y, Math.sin(theta) * 34);
+        const tangent = new THREE.Vector3().crossVectors(st.from, new THREE.Vector3(0, 1, 0)).normalize();
+        st.dir.copy(tangent).multiplyScalar(Math.random() < 0.5 ? 1 : -1);
+        st.dir.y = -(0.3 + Math.random() * 0.4);
+        st.dir.normalize();
+      }
+      st.t0 = t;
+      st.dur = 1.0 + Math.random() * 0.7;
+      st.active = true;
+    }
+
+    if (st.active) {
+      const u = (t - st.t0) / st.dur;
+      if (u >= 1) {
+        st.active = false;
+        st.next = t + (st.debug ? 4 : 45 + Math.random() * 75);
+        material.uniforms.uAlpha.value = 0;
+        mesh.visible = false;
+      } else {
+        const travel = 14;
+        st.mid.copy(st.from).addScaledVector(st.dir, u * travel - 1.1);
+        mesh.position.copy(st.mid);
+        // Face the camera while staying aligned with the travel direction
+        st.bx.copy(st.dir);
+        st.bz.copy(camera.position).sub(st.mid).normalize();
+        st.by.crossVectors(st.bz, st.bx).normalize();
+        st.bz.crossVectors(st.bx, st.by);
+        st.basis.makeBasis(st.bx, st.by, st.bz);
+        mesh.quaternion.setFromRotationMatrix(st.basis);
+        mesh.visible = true;
+        material.uniforms.uAlpha.value = Math.pow(Math.sin(Math.PI * u), 0.7) * 0.9;
+      }
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} material={material} frustumCulled={false} visible={false}>
+      <planeGeometry args={[3.0, 0.08]} />
+    </mesh>
+  );
+}
+
 function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   const { camera } = useThree();
   // Section boundaries as fractions of the normal scroll span, measured
@@ -263,6 +385,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
       </group>
       <Moon />
       <ParallaxStars />
+      <Meteor />
     </>
   );
 }
