@@ -1428,7 +1428,7 @@ body::before {
 
 .record-header,
 .record-footer {
-  max-width: 46rem;
+  max-width: 84rem;
   margin: 0 auto;
   padding: 1.25rem 1.25rem;
   display: flex;
@@ -1472,9 +1472,45 @@ body::before {
 }
 
 .record-main {
-  max-width: 46rem;
+  max-width: 84rem;
   margin: 0 auto;
-  padding: 3rem 1.25rem 1rem;
+  padding: 3rem 2rem 1rem;
+}
+
+/* Writeup layout: prose column at reading measure, figure beside it
+   using the remaining width instead of stacking below */
+.record-article.has-figure {
+  display: grid;
+  grid-template-columns: minmax(0, 40rem) minmax(0, 1fr);
+  column-gap: 3rem;
+  grid-template-areas:
+    "notice notice"
+    "kicker kicker"
+    "title  title"
+    "prose  figure"
+    "link   figure"
+    "notes  figure"
+    "pager  pager";
+}
+
+.record-article.has-figure .draft-notice { grid-area: notice; }
+.record-article.has-figure .record-kicker { grid-area: kicker; }
+.record-article.has-figure .record-title { grid-area: title; }
+.record-article.has-figure .record-prose:first-of-type { grid-area: prose; }
+.record-article.has-figure .record-figure { grid-area: figure; align-self: start; position: sticky; top: 2rem; margin: 0; }
+.record-article.has-figure .record-section-link { grid-area: link; justify-self: start; }
+.record-article.has-figure .record-prose:last-of-type { grid-area: notes; }
+.record-article.has-figure .record-pager { grid-area: pager; }
+
+@media (max-width: 1024px) {
+  .record-article.has-figure {
+    display: block;
+  }
+
+  .record-article.has-figure .record-figure {
+    position: static;
+    margin: 2rem 0 1rem;
+  }
 }
 
 .record-kicker {

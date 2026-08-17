@@ -21,7 +21,7 @@ export default async function ExperimentPage({ params }) {
   const next = experiments[i + 1];
   return (
     <RecordShell>
-      <article className="record-article">
+      <article className="record-article has-figure">
         {e.draft && <DraftNotice />}
         <p className="record-kicker">Experiment {e.number}</p>
         <h1 className="record-title">{e.title}</h1>
