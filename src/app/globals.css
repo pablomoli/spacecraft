@@ -1488,31 +1488,27 @@ body::before {
   max-width: none;
 }
 
-/* Writeup layout: prose column at reading measure, figure beside it
-   using the remaining width instead of stacking below */
+/* Writeup layout: one text column at reading measure, the figure stack
+   beside it. A plain two-column grid: hand-mapped named areas broke the
+   moment a new child appeared (auto-placement put it in the first cell). */
 .record-article.has-figure {
   display: grid;
   grid-template-columns: minmax(0, 40rem) minmax(0, 1fr);
   column-gap: 3rem;
-  grid-template-areas:
-    "notice notice"
-    "kicker kicker"
-    "title  title"
-    "prose  figure"
-    "link   figure"
-    "notes  figure"
-    "pager  pager";
+  align-items: start;
 }
 
-.record-article.has-figure .draft-notice { grid-area: notice; }
-.record-article.has-figure .record-kicker { grid-area: kicker; }
-.record-article.has-figure .record-title { grid-area: title; }
-.record-article.has-figure .record-prose:first-of-type { grid-area: prose; }
-.record-article.has-figure .record-figures { grid-area: figure; align-self: start; display: flex; flex-direction: column; gap: 1.5rem; }
-.record-article.has-figure .record-figure { margin: 0; }
-.record-article.has-figure .record-section-link { grid-area: link; justify-self: start; }
-.record-article.has-figure .record-prose:last-of-type { grid-area: notes; }
-.record-article.has-figure .record-pager { grid-area: pager; }
+.record-article.has-figure .record-body {
+  min-width: 0;
+}
+
+.record-article.has-figure .record-figures {
+  min-width: 0;
+}
+
+.record-article.has-figure .record-pager {
+  grid-column: 1 / -1;
+}
 
 @media (max-width: 1024px) {
   .record-article.has-figure {

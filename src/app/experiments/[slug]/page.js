@@ -23,26 +23,28 @@ export default async function ExperimentPage({ params }) {
   return (
     <RecordShell>
       <article className="record-article has-figure">
-        <p className="record-kicker">Experiment {e.number}</p>
-        <h1 className="record-title">{e.title}</h1>
-        <div className="record-prose">
-          <Prose paragraphs={e.paragraphs} slug={e.slug} />
+        <div className="record-body">
+          <p className="record-kicker">Experiment {e.number}</p>
+          <h1 className="record-title">{e.title}</h1>
+          <div className="record-prose">
+            <Prose paragraphs={e.paragraphs} slug={e.slug} />
+          </div>
+          {e.deep && (
+            <section className="record-deep">
+              <h2 className="record-h2">{e.deep.title}</h2>
+              <div className="record-prose">
+                <Prose paragraphs={e.deep.paragraphs} slug={e.slug} />
+              </div>
+            </section>
+          )}
+          <a className="record-section-link" href={e.sectionUrl}>
+            The full section on GitHub: scripts, data, and the complete record.
+          </a>
+          <div className="record-prose">
+            <Footnotes footnotes={e.footnotes} slug={e.slug} />
+          </div>
         </div>
         <FigureGallery figures={e.figures} />
-        {e.deep && (
-          <section className="record-deep">
-            <h2 className="record-h2">{e.deep.title}</h2>
-            <div className="record-prose">
-              <Prose paragraphs={e.deep.paragraphs} slug={e.slug} />
-            </div>
-          </section>
-        )}
-        <a className="record-section-link" href={e.sectionUrl}>
-          The full section on GitHub: scripts, data, and the complete record.
-        </a>
-        <div className="record-prose">
-          <Footnotes footnotes={e.footnotes} slug={e.slug} />
-        </div>
         <nav className="record-pager">
           {prev ? (
             <Link href={`/experiments/${prev.slug}/`}>&larr; {prev.title}</Link>
