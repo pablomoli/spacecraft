@@ -593,7 +593,7 @@ function ExperimentsRail({ scrollContainerRef, kicker }) {
         <Link href="/experiments/" className="exp-rail-viewall">view all</Link>
       </div>
       <div className="exp-rail" ref={trackRef}>
-        {experiments.map((e) => (
+        {experiments.filter((e) => e.featured).map((e) => (
           <Link key={e.slug} href={`/experiments/${e.slug}/`} className="exp-card exp-card--rail">
             <span className="exp-card-figure">
               <img src={e.card} alt={e.figures[0].alt} loading="lazy" />

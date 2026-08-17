@@ -2,6 +2,7 @@ import Link from "next/link";
 import RecordShell from "../../../components/RecordShell";
 import { experiments, getExperiment } from "../../../content/experiments";
 import { Prose, Footnotes } from "../../../components/Prose";
+import FigureGallery from "../../../components/FigureGallery";
 
 export function generateStaticParams() {
   return experiments.map((e) => ({ slug: e.slug }));
@@ -27,16 +28,17 @@ export default async function ExperimentPage({ params }) {
         <div className="record-prose">
           <Prose paragraphs={e.paragraphs} slug={e.slug} />
         </div>
-        <div className="record-figures">
-          {e.figures.map((f) => (
-            <figure key={f.src} className="record-figure">
-              <img src={f.src} alt={f.alt} loading="lazy" />
-              <figcaption>{f.caption}</figcaption>
-            </figure>
-          ))}
-        </div>
+        <FigureGallery figures={e.figures} />
+        {e.deep && (
+          <section className="record-deep">
+            <h2 className="record-h2">{e.deep.title}</h2>
+            <div className="record-prose">
+              <Prose paragraphs={e.deep.paragraphs} slug={e.slug} />
+            </div>
+          </section>
+        )}
         <a className="record-section-link" href={e.sectionUrl}>
-          Read the full section, figures and all.
+          The full section on GitHub: scripts, data, and the complete record.
         </a>
         <div className="record-prose">
           <Footnotes footnotes={e.footnotes} slug={e.slug} />
