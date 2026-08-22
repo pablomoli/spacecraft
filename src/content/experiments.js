@@ -511,4 +511,11 @@ export const externalSections = [
     card: '/images/experiments/card-ext-51-clip-identity.webp',
     sectionUrl: `${RECORD}/51-clip-identity`,
   },
+  {
+    number: '52',
+    title: 'Regrowing the compass',
+    hook: '48R (#193): section 48 lost the compass 3-2 on two thin poles — did those axes die of the corpus, or of their recipes?',
+    card: '/images/experiments/card-ext-52-compass-regrow.webp',
+    sectionUrl: `${RECORD}/52-compass-regrow`,
+  },
 ];
