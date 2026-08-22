@@ -435,6 +435,13 @@ export const externalSections = [
     sectionUrl: `${RECORD}/39-trace-inventory`,
   },
   {
+    number: '41',
+    title: 'Vector search from first principles',
+    hook: 'the index we depend on is a black box we never built once — brute-force 10M real-geometry vectors on a 16GB MacBook, then earn the speed back stepwise, recall priced at every step',
+    card: '/images/experiments/card-ext-41-vector-search.webp',
+    sectionUrl: `${RECORD}/41-vector-search`,
+  },
+  {
     number: '42',
     title: 'Atlas inventory',
     hook: '#183 rung 0: before the activation atlas builds anything, do its inputs exist, how far do they reach over today\'s corpus, and which latent is the protagonist?',
