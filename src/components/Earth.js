@@ -75,32 +75,44 @@ const surfaceFragment = /* glsl */ `
   }
 `;
 
-// Outer halo: back-side shell, brightest just past the limb, tinted by
-// how much of the visible limb is sunlit
+// Outer halo: back-side shell brightest just past the limb, tinted by
+// how much of the visible limb is sunlit. Falloff is driven by the ray's
+// closest approach to the planet centre, not the shell's normal, so the
+// peak sits on the true limb and alpha is exactly zero at the shell's
+// polygonal edge
+const HALO_SHELL = 1.035;
+
 const haloVertex = /* glsl */ `
   varying vec3 vWorldNormal;
-  varying vec3 vViewDir;
+  varying vec3 vWorldPos;
+  varying vec3 vCenter;
 
   void main() {
     vWorldNormal = normalize(mat3(modelMatrix) * normal);
     vec4 worldPos = modelMatrix * vec4(position, 1.0);
-    vViewDir = normalize(cameraPosition - worldPos.xyz);
+    vWorldPos = worldPos.xyz;
+    vCenter = modelMatrix[3].xyz;
     gl_Position = projectionMatrix * viewMatrix * worldPos;
   }
 `;
 
 const haloFragment = /* glsl */ `
   uniform vec3 sunDir;
+  uniform float planetRadius;
+  uniform float shellScale;
   varying vec3 vWorldNormal;
-  varying vec3 vViewDir;
+  varying vec3 vWorldPos;
+  varying vec3 vCenter;
 
   void main() {
-    vec3 n = normalize(vWorldNormal);
-    vec3 v = normalize(vViewDir);
-    float x = 1.0 - abs(dot(n, v));
-    float line = pow(x, 10.0) * 1.3;
-    float scatter = pow(x, 3.5) * 0.18;
-    float lit = smoothstep(-0.4, 0.6, dot(n, normalize(sunDir)));
+    vec3 d = normalize(vWorldPos - cameraPosition);
+    vec3 rel = vCenter - cameraPosition;
+    // impact parameter in planet radii: 1.0 is the limb
+    float b = length(rel - dot(rel, d) * d) / planetRadius;
+    float t = clamp((b - 1.0) / (shellScale - 1.0), 0.0, 1.0);
+    float line = exp(-t * 9.0) * (1.0 - t) * 1.1;
+    float scatter = exp(-t * 2.5) * (1.0 - t) * 0.16;
+    float lit = smoothstep(-0.4, 0.6, dot(normalize(vWorldNormal), normalize(sunDir)));
     vec3 color = mix(vec3(0.08, 0.16, 0.38), vec3(0.38, 0.64, 1.0), lit);
     gl_FragColor = vec4(color, line + scatter);
   }
@@ -108,11 +120,12 @@ const haloFragment = /* glsl */ `
 
 export default function Earth() {
   const groupRef = useRef();
-  // Memoize geometry; keep segments modest for perf (48 on low-power, otherwise 64)
+  // The hero shot fills the viewport with the limb; below ~96 segments the
+  // silhouette reads as straight runs
   const geo = useMemo(() => {
     const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
     const mem = typeof navigator !== "undefined" && navigator.deviceMemory ? navigator.deviceMemory : 4;
-    const segments = mem <= 4 || dpr <= 1 ? 48 : 64;
+    const segments = mem <= 4 || dpr <= 1 ? 96 : 128;
     return new THREE.SphereGeometry(3, segments, segments);
   }, []);
 
@@ -157,7 +170,11 @@ export default function Earth() {
   const haloMaterial = useMemo(
     () =>
       new THREE.ShaderMaterial({
-        uniforms: { sunDir: { value: SUN_DIRECTION.clone() } },
+        uniforms: {
+          sunDir: { value: SUN_DIRECTION.clone() },
+          planetRadius: { value: 3 },
+          shellScale: { value: HALO_SHELL },
+        },
         vertexShader: haloVertex,
         fragmentShader: haloFragment,
         transparent: true,
@@ -260,7 +277,7 @@ export default function Earth() {
       <mesh geometry={geo}>
         <primitive object={surfaceMaterial} attach="material" />
       </mesh>
-      <mesh geometry={geo} scale={[1.022, 1.022, 1.022]}>
+      <mesh geometry={geo} scale={HALO_SHELL}>
         <primitive object={haloMaterial} attach="material" />
       </mesh>
     </group>
