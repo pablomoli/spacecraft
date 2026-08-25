@@ -372,22 +372,26 @@ function Satellite() {
   const craftRef = useRef(null);
   const { scene } = useGLTF(UFO_URL);
 
-  // useGLTF caches the scene; clone the lit materials so the cache stays
-  // untouched if another instance ever mounts
+  // One clone per named material, shared by every mesh that used it;
+  // cloning keeps useGLTF's cached scene untouched
   const lights = useMemo(() => {
-    const out = [];
+    const byName = new Map();
     scene.traverse((o) => {
       if (!o.isMesh) return;
       const spec = UFO_LIGHTS[o.material.name];
       if (!spec) return;
-      const m = o.material.clone();
-      m.emissive = new THREE.Color(...spec.color);
-      m.emissiveIntensity = spec.base;
-      m.toneMapped = false;
-      o.material = m;
-      out.push({ material: m, ...spec });
+      let entry = byName.get(o.material.name);
+      if (!entry) {
+        const m = o.material.clone();
+        m.emissive = new THREE.Color(...spec.color);
+        m.emissiveIntensity = spec.base;
+        m.toneMapped = false;
+        entry = { material: m, ...spec };
+        byName.set(o.material.name, entry);
+      }
+      o.material = entry.material;
     });
-    return out;
+    return [...byName.values()];
   }, [scene]);
 
   const beaconMaterial = useMemo(
