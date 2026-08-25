@@ -3,7 +3,7 @@ import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TextureLoader } from "three";
-import Earth, { SUN_DIRECTION } from "./Earth";
+import Earth, { SUN_DIRECTION, MOON_DIRECTION } from "./Earth";
 
 const EARTH_POS = new THREE.Vector3(0, 0, -1);
 const UP = new THREE.Vector3(0, 1, 0);
@@ -76,7 +76,12 @@ function applyShot(camera, shot, turn = 0) {
 
 
 // Solar System Scope 2k moon map, lambert-lit by the same fixed sun,
-// faint cool rim. Positioned for the receded rail shot's open sky.
+// faint cool rim, additive halo so it reads as a light source.
+// Radius is to scale (0.273 of Earth); distance is not: at 60 Earth
+// radii it would sit past the star shells and vanish
+const MOON_RADIUS = 3 * 0.273;
+const MOON_DISTANCE = 14;
+
 function Moon() {
   const [moonMap] = useLoader(TextureLoader, ["/moon.webp"]);
 
@@ -110,20 +115,56 @@ function Moon() {
           vec3 n = normalize(vWorldNormal);
           float ndl = max(dot(n, normalize(sunDir)), 0.0);
           vec3 albedo = texture2D(moonMap, vUv).rgb;
-          vec3 sunColor = vec3(1.0, 0.93, 0.82);
-          vec3 col = albedo * (sunColor * ndl * 1.1 + vec3(0.5, 0.58, 0.8) * 0.22);
+          vec3 sunColor = vec3(1.0, 0.95, 0.86);
+          vec3 col = albedo * (sunColor * ndl * 1.5 + vec3(0.5, 0.58, 0.8) * 0.2);
           float rim = pow(1.0 - max(dot(n, normalize(vViewDir)), 0.0), 3.0);
-          col += vec3(0.45, 0.55, 0.8) * rim * 0.35;
-          gl_FragColor = vec4(col * 1.25, 1.0);
+          col += vec3(0.6, 0.66, 0.85) * rim * 0.3;
+          gl_FragColor = vec4(col * 1.35, 1.0);
         }
       `,
     });
   }, [moonMap]);
 
+  // Radial gradient halo drawn once; sprite depth-tests against the
+  // moon's own surface so only the ring outside the disc shows
+  const haloMap = useMemo(() => {
+    if (typeof document === "undefined") return null;
+    const size = 128;
+    const c = document.createElement("canvas");
+    c.width = c.height = size;
+    const ctx = c.getContext("2d");
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    g.addColorStop(0.0, "rgba(255, 246, 228, 0.55)");
+    g.addColorStop(0.3, "rgba(255, 242, 220, 0.16)");
+    g.addColorStop(1.0, "rgba(255, 242, 220, 0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }, []);
+
+  const position = useMemo(
+    () => EARTH_POS.clone().addScaledVector(MOON_DIRECTION, MOON_DISTANCE).toArray(),
+    [],
+  );
+
   return (
-    <mesh position={[-3.5, 3.0, 3]} material={material}>
-      <sphereGeometry args={[0.5, 32, 32]} />
-    </mesh>
+    <group position={position}>
+      <mesh material={material}>
+        <sphereGeometry args={[MOON_RADIUS, 48, 48]} />
+      </mesh>
+      {haloMap && (
+        <sprite scale={MOON_RADIUS * 5}>
+          <spriteMaterial
+            map={haloMap}
+            transparent
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </sprite>
+      )}
+    </group>
   );
 }
 

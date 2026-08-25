@@ -7,6 +7,10 @@ import { TextureLoader, ImageBitmapLoader } from "three";
 // terminator, night and back. Chosen so About faces day, Projects rides
 // the terminator, the receded rail view faces the city-lit night side.
 export const SUN_DIRECTION = new THREE.Vector3(0.64, 0.22, 0.74).normalize();
+// Earth -> moon. Upper right of the hero at 40 deg off-axis, the least
+// the planet's disc allows; off-screen in the receded rail shot (that
+// camera is on the far side); never within 5 units of any camera key
+export const MOON_DIRECTION = new THREE.Vector3(10.4, 3.1, -8.8).normalize();
 
 const surfaceVertex = /* glsl */ `
   varying vec2 vUv;
@@ -30,6 +34,7 @@ const surfaceFragment = /* glsl */ `
   uniform sampler2D nightMap;
   uniform sampler2D cloudMap;
   uniform vec3 sunDir;
+  uniform vec3 moonDir;
   uniform float time;
   varying vec2 vUv;
   varying vec3 vWorldNormal;
@@ -61,6 +66,10 @@ const surfaceFragment = /* glsl */ `
     surf += day * vec3(0.95, 0.45, 0.18) * term * 0.35;
 
     surf = mix(surf, vec3(0.9, 0.92, 0.95) * (0.10 + 0.90 * dayF), cloud * 0.55);
+
+    // Moonlight: cool directional fill on the night side only
+    float mdl = max(dot(n, normalize(moonDir)), 0.0);
+    surf += day * vec3(0.55, 0.65, 0.9) * mdl * (1.0 - dayF) * 0.12;
 
     surf += night * vec3(1.0, 0.82, 0.55) * pow(1.0 - dayF, 1.7) * (1.0 - cloud * 0.75) * 1.7;
 
@@ -158,6 +167,7 @@ export default function Earth() {
           nightMap: { value: lightsMapLow },
           cloudMap: { value: cloudsMapLow },
           sunDir: { value: SUN_DIRECTION.clone() },
+          moonDir: { value: MOON_DIRECTION.clone() },
           time: { value: 0 },
         },
         vertexShader: surfaceVertex,
