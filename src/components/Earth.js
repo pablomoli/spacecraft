@@ -128,7 +128,7 @@ const haloFragment = /* glsl */ `
   }
 `;
 
-export default function Earth() {
+export default function Earth({ children }) {
   const groupRef = useRef();
   // The hero shot fills the viewport with the limb; below ~96 segments the
   // silhouette reads as straight runs
@@ -291,6 +291,7 @@ export default function Earth() {
       <mesh geometry={geo} scale={HALO_SHELL}>
         <primitive object={haloMaterial} attach="material" />
       </mesh>
+      {children}
     </group>
   );
 }

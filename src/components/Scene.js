@@ -4,9 +4,17 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TextureLoader } from "three";
 import Earth, { SUN_DIRECTION, MOON_DIRECTION } from "./Earth";
+import Pins from "./Pins";
+import { makeRadialTexture } from "./glow";
 
 const EARTH_POS = new THREE.Vector3(0, 0, -1);
 const UP = new THREE.Vector3(0, 1, 0);
+
+// Places pinned on the globe: home plus the hackathon venues
+const PINS = [
+  { id: "hacklytics", kind: "hackathon", lat: 33.776, lon: -84.398 }, // Georgia Tech
+  { id: "knighthacks", kind: "hackathon", lat: 28.602, lon: -81.2 }, // UCF
+];
 
 // One shot per journey section, matched to the measured panel side:
 // earthX is where Earth sits on screen (-1 left, +1 right), opposite
@@ -125,24 +133,17 @@ function Moon() {
     });
   }, [moonMap]);
 
-  // Radial gradient halo drawn once; sprite depth-tests against the
-  // moon's own surface so only the ring outside the disc shows
-  const haloMap = useMemo(() => {
-    if (typeof document === "undefined") return null;
-    const size = 128;
-    const c = document.createElement("canvas");
-    c.width = c.height = size;
-    const ctx = c.getContext("2d");
-    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-    g.addColorStop(0.0, "rgba(255, 246, 228, 0.55)");
-    g.addColorStop(0.3, "rgba(255, 242, 220, 0.16)");
-    g.addColorStop(1.0, "rgba(255, 242, 220, 0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, size, size);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, []);
+  // Sprite depth-tests against the moon's own surface, so only the
+  // ring outside the disc shows
+  const haloMap = useMemo(
+    () =>
+      makeRadialTexture([
+        [0.0, "rgba(255, 246, 228, 0.55)"],
+        [0.3, "rgba(255, 242, 220, 0.16)"],
+        [1.0, "rgba(255, 242, 220, 0)"],
+      ]),
+    [],
+  );
 
   const position = useMemo(
     () => EARTH_POS.clone().addScaledVector(MOON_DIRECTION, MOON_DISTANCE).toArray(),
@@ -537,7 +538,9 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
       <ambientLight intensity={0.15} />
       <directionalLight position={SUN_DIRECTION.clone().multiplyScalar(10)} intensity={2.5} />
       <group position={EARTH_POS.toArray()}>
-        <Earth />
+        <Earth>
+          <Pins pins={PINS} />
+        </Earth>
       </group>
       <Moon />
       <ParallaxStars />
