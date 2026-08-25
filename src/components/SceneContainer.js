@@ -86,7 +86,7 @@ function SceneContent({
         dpr={[1, 1.5]}
         gl={{
           powerPreference: "high-performance",
-          antialias: false,
+          antialias: true,
         }}
         style={{
           // During the wormhole the scene stays up through the charge

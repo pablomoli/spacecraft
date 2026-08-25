@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, useMemo } from "react";
-import { useFrame, useThree, useLoader } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TextureLoader } from "three";
 import Earth, { SUN_DIRECTION } from "./Earth";
@@ -313,30 +314,62 @@ function Meteor() {
 }
 
 
-// A small satellite on an inclined low orbit: crosses the hero's disc
-// every ~50s with a faint glow, a nod to the surveying origin story
+// A small craft on an inclined low orbit: crosses the hero's disc every
+// ~50s, a nod to the surveying origin story
+const UFO_URL = "/models/ovni.glb";
+// Emissive parts keyed by material name as exported in the GLB. sharp
+// lamps flash briefly once per cycle; soft ones breathe
+const UFO_LIGHTS = {
+  Engine_glow: { color: [0.2, 0.7, 1.0], base: 2.2, pulse: 1.2, rate: 4.0, phase: 0, sharp: false },
+  light_bulb: { color: [1.0, 0.85, 0.5], base: 0.6, pulse: 2.0, rate: 3.6, phase: 1.2, sharp: true },
+  yellow: { color: [1.0, 0.9, 0.3], base: 0.8, pulse: 1.4, rate: 2.4, phase: 2.5, sharp: true },
+};
+const ENGINE_COLOR = "#3cb4ff";
+
 function Satellite() {
   const groupRef = useRef(null);
+  const craftRef = useRef(null);
+  const { scene } = useGLTF(UFO_URL);
 
-  const glowMaterial = useMemo(
+  // useGLTF caches the scene; clone the lit materials so the cache stays
+  // untouched if another instance ever mounts
+  const lights = useMemo(() => {
+    const out = [];
+    scene.traverse((o) => {
+      if (!o.isMesh) return;
+      const spec = UFO_LIGHTS[o.material.name];
+      if (!spec) return;
+      const m = o.material.clone();
+      m.emissive = new THREE.Color(...spec.color);
+      m.emissiveIntensity = spec.base;
+      m.toneMapped = false;
+      o.material = m;
+      out.push({ material: m, ...spec });
+    });
+    return out;
+  }, [scene]);
+
+  const beaconMaterial = useMemo(
     () =>
       new THREE.ShaderMaterial({
         transparent: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
+        uniforms: { uPulse: { value: 1 } },
         vertexShader: `
+          uniform float uPulse;
           void main() {
             vec4 mv = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-            gl_PointSize = clamp(500.0 / -mv.z, 5.0, 22.0);
+            gl_PointSize = clamp(900.0 / -mv.z, 8.0, 64.0) * uPulse;
             gl_Position = projectionMatrix * mv;
           }
         `,
         fragmentShader: `
           void main() {
             float d = length(gl_PointCoord - 0.5);
-            float core = smoothstep(0.16, 0.03, d);
-            float glow = smoothstep(0.5, 0.1, d) * 0.35;
-            gl_FragColor = vec4(vec3(1.0, 0.98, 0.9), core + glow);
+            float core = smoothstep(0.12, 0.02, d);
+            float glow = smoothstep(0.5, 0.08, d) * 0.3;
+            gl_FragColor = vec4(vec3(0.35, 0.75, 1.0), core * 0.6 + glow);
           }
         `,
       }),
@@ -351,8 +384,10 @@ function Satellite() {
 
   useFrame(({ clock }) => {
     const g = groupRef.current;
-    if (!g) return;
-    const u = clock.elapsedTime * 0.13;
+    const c = craftRef.current;
+    if (!g || !c) return;
+    const t = clock.elapsedTime;
+    const u = t * 0.13;
     const r = 3.55;
     const incl = 0.6;
     g.position.set(
@@ -360,14 +395,32 @@ function Satellite() {
       EARTH_POS.y + Math.sin(u) * Math.sin(incl) * r,
       EARTH_POS.z + Math.sin(u) * Math.cos(incl) * r,
     );
+
+    // Saucer spin plus a slow bank and bob: reads as flown, not carried
+    c.rotation.y = t * 1.6;
+    c.rotation.z = Math.sin(t * 0.7) * 0.12;
+    c.rotation.x = Math.sin(t * 0.45) * 0.08;
+    c.position.y = Math.sin(t * 1.3) * 0.012;
+
+    for (const l of lights) {
+      const w = Math.sin(t * l.rate + l.phase);
+      const p = l.sharp ? Math.pow(Math.max(w, 0), 12) : 0.5 + 0.5 * w;
+      l.material.emissiveIntensity = l.base + l.pulse * p;
+    }
+    beaconMaterial.uniforms.uPulse.value = 0.85 + 0.15 * Math.sin(t * 4.0);
   });
 
   return (
     <group ref={groupRef}>
-      <points geometry={pointGeometry} material={glowMaterial} frustumCulled={false} />
+      <group ref={craftRef}>
+        <primitive object={scene} scale={0.02} />
+      </group>
+      <pointLight color={ENGINE_COLOR} intensity={3} distance={0.5} decay={2} />
+      <points geometry={pointGeometry} material={beaconMaterial} frustumCulled={false} />
     </group>
   );
 }
+useGLTF.preload(UFO_URL);
 
 function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
   const { camera } = useThree();
@@ -437,6 +490,7 @@ function Scene({ scrollProgress, extraScrollProgress, scrollPhase }) {
       {/* Earth lights itself in-shader from SUN_DIRECTION; the ambient
           only keeps any future standard-material props readable */}
       <ambientLight intensity={0.15} />
+      <directionalLight position={SUN_DIRECTION.clone().multiplyScalar(10)} intensity={2.5} />
       <group position={EARTH_POS.toArray()}>
         <Earth />
       </group>
