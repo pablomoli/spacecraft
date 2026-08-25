@@ -12,6 +12,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 
 // Places pinned on the globe: home plus the hackathon venues
 const PINS = [
+  { id: "home", kind: "home", lat: 28.538, lon: -81.379 }, // Orlando
   { id: "hacklytics", kind: "hackathon", lat: 33.776, lon: -84.398 }, // Georgia Tech
   { id: "knighthacks", kind: "hackathon", lat: 28.602, lon: -81.2 }, // UCF
 ];
