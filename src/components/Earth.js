@@ -51,26 +51,27 @@ const surfaceFragment = /* glsl */ `
     // 0.006 uv/s: alive at a glance without racing (tuned by eye twice)
     float cloud = texture2D(cloudMap, vec2(vUv.x - time * 0.006, vUv.y)).r;
 
-    // Warm key light, cool space fill: the dark side stays legible blue
-    // instead of dropping to black
+    // Night-side light budget, all cool so the dark side reads blue
+    // rather than black: uniform space fill plus directional moonlight
+    // that switches off where the sun already dominates
+    float mdl = max(dot(n, normalize(moonDir)), 0.0);
+    vec3 ambient = vec3(0.45, 0.55, 0.8) * 0.17
+                 + vec3(0.55, 0.65, 0.9) * 0.12 * mdl * (1.0 - dayF);
     vec3 sunColor = vec3(1.0, 0.93, 0.82);
-    vec3 fill = vec3(0.45, 0.55, 0.8);
-    vec3 surf = day * (sunColor * dayF * 0.95 + fill * 0.17);
+    vec3 surf = day * (sunColor * dayF * 0.95 + ambient);
 
     float water = clamp((day.b - max(day.r, day.g)) * 5.0, 0.0, 1.0);
     vec3 glintDir = reflect(-normalize(sunDir), n);
     float glint = pow(max(dot(glintDir, v), 0.0), 90.0) * water * dayF;
     surf += vec3(1.0, 0.95, 0.85) * glint * 0.9;
 
+    // Warm terminator band: low sun reddened by the atmosphere
     float term = smoothstep(0.22, 0.0, abs(ndl));
     surf += day * vec3(0.95, 0.45, 0.18) * term * 0.35;
 
     surf = mix(surf, vec3(0.9, 0.92, 0.95) * (0.10 + 0.90 * dayF), cloud * 0.55);
 
-    // Moonlight: cool directional fill on the night side only
-    float mdl = max(dot(n, normalize(moonDir)), 0.0);
-    surf += day * vec3(0.55, 0.65, 0.9) * mdl * (1.0 - dayF) * 0.12;
-
+    // City lights: emissive, night side only, dimmed under cloud
     surf += night * vec3(1.0, 0.82, 0.55) * pow(1.0 - dayF, 1.7) * (1.0 - cloud * 0.75) * 1.7;
 
     float fres = pow(1.0 - max(dot(n, v), 0.0), 4.5);
