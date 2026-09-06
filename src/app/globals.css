@@ -5,7 +5,7 @@
   }
 
   .section {
-    height: 100vh !important;
+    height: 100dvh !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -1174,7 +1174,7 @@ body::before {
   padding: 1.5rem 1.75rem;
   max-width: 820px;
   width: 100%;
-  max-height: calc(100vh - 7rem);
+  max-height: calc(100dvh - 7rem);
   margin: 0 clamp(16px, 3vw, 56px);
   text-align: left;
   pointer-events: auto;
@@ -1315,7 +1315,7 @@ body::before {
 
   .section-panel .interactive-section {
     height: auto;
-    max-height: 60vh;
+    max-height: 60dvh;
     flex-direction: column;
   }
 
@@ -1509,13 +1509,28 @@ body::before {
   grid-column: 1 / -1;
 }
 
+/* Narrow: one column, lead figure between the title and the first
+   paragraph so the image the card promised is the first thing seen.
+   Both wrappers dissolve so their children can be ordered as siblings. */
 @media (max-width: 1024px) {
   .record-article.has-figure {
-    display: block;
+    display: flex;
+    flex-direction: column;
   }
 
+  .record-article.has-figure .record-body,
   .record-article.has-figure .record-figures {
-    margin: 2rem 0 1rem;
+    display: contents;
+  }
+
+  .record-article.has-figure .record-kicker,
+  .record-article.has-figure .record-title {
+    order: -2;
+  }
+
+  .record-article.has-figure .record-figure--lead {
+    order: -1;
+    margin: 0 0 2rem;
   }
 }
 
@@ -1860,7 +1875,7 @@ body::before {
   /* Rail degrades to a vertical stack of the same cards */
   .section.exp-section {
     height: auto !important;
-    min-height: 100vh !important;
+    min-height: 100dvh !important;
   }
 
   .exp-rail-wrap {

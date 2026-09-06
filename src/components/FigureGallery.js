@@ -25,7 +25,10 @@ export default function FigureGallery({ figures }) {
     <>
       <div className="record-figures">
         {figures.map((f, i) => (
-          <figure key={f.src} className="record-figure">
+          <figure
+            key={f.src}
+            className={i === 0 ? "record-figure record-figure--lead" : "record-figure"}
+          >
             <button
               type="button"
               className="figure-expand"
